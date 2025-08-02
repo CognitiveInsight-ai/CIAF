@@ -1,0 +1,160 @@
+# CIAF Bug Tracker and Issues
+
+This file tracks known issues, bugs, and feature requests for the CIAF (Cognitive Insight AI Framework) Python SDK.
+
+## How to Report Issues
+
+When reporting issues, please include:
+1. **Description**: Clear description of the issue
+2. **Environment**: Python version, OS, CIAF version
+3. **Steps to Reproduce**: Minimal code example
+4. **Expected Behavior**: What should happen
+5. **Actual Behavior**: What actually happens
+
+## Known Issues
+
+### Performance
+- [ ] Memory optimization for very large datasets (>1M items)
+- [ ] Parallel processing for capsule materialization
+
+### Documentation
+- [ ] Complete API reference documentation
+- [ ] More usage examples for different ML frameworks
+- [ ] Performance tuning guidelines
+
+### Testing
+- [ ] Integration tests with real ML frameworks
+- [ ] Stress testing with large datasets
+- [ ] Cross-platform compatibility testing
+
+## Feature Requests
+
+### High Priority
+- [ ] Support for distributed training scenarios
+- [ ] Integration with MLflow and other ML platforms
+- [ ] Enhanced visualization tools for provenance tracking
+
+### Medium Priority
+- [ ] Support for additional cryptographic algorithms
+- [ ] Plugin architecture for custom extensions
+- [ ] REST API interface for remote operations
+
+### Low Priority
+- [ ] GUI interface for non-technical users
+- [ ] Integration with blockchain systems
+- [ ] Support for federated learning scenarios
+
+## Resolved Issues
+
+### v0.4.0
+- [x] Modular architecture implementation
+- [x] Performance optimization through lazy materialization
+- [x] Comprehensive test suite
+- [x] Updated documentation and examples
+
+---
+
+For new issues, please create a GitHub issue or contact the development team.
+
+## Bug Report Template
+
+When reporting a bug, please include:
+
+1. **Bug Description**: Brief summary of the issue
+2. **Environment**: Python version, OS, ZKETF version
+3. **Steps to Reproduce**: Detailed steps to recreate the bug
+4. **Expected Behavior**: What should happen
+5. **Actual Behavior**: What actually happens
+6. **Error Messages**: Full error messages/stack traces
+7. **Additional Context**: Any other relevant information
+
+## Current Issues
+
+### High Priority Issues
+
+- [ ] **Issue #001**: Legacy editable install deprecation warning
+  - **Description**: `pip install -e .` shows deprecation warning about setup.py develop
+  - **Priority**: High
+  - **Status**: Open
+  - **Solution**: Already addressed with pyproject.toml configuration
+  - **Date Reported**: 2025-07-30
+
+### Medium Priority Issues
+
+- [ ] **Issue #002**: License classifier mismatch
+  - **Description**: pyproject.toml uses "Modified MIT License" classifier but actual license is dual-licensed
+  - **Priority**: Medium
+  - **Status**: Open
+  - **Date Reported**: 2025-07-30
+
+### Low Priority Issues
+
+- [ ] **Issue #003**: Missing CONTRIBUTING.md
+  - **Description**: No contribution guidelines available
+  - **Priority**: Low
+  - **Status**: Open
+  - **Date Reported**: 2025-07-30
+
+## Feature Requests
+
+### Planned Features
+
+- [ ] **Feature #001**: API Reference Documentation
+  - **Description**: Generate comprehensive API documentation using Sphinx
+  - **Priority**: High
+  - **Status**: Planned
+
+- [ ] **Feature #002**: Advanced Examples
+  - **Description**: Create more comprehensive examples beyond demo.py
+  - **Priority**: Medium
+  - **Status**: Planned
+
+- [ ] **Feature #003**: Security Documentation
+  - **Description**: Add SECURITY.md for vulnerability reporting
+  - **Priority**: Medium
+  - **Status**: Planned
+
+## Resolved Issues
+
+### Fixed in v0.1.0
+
+- [x] **Issue #000**: Initial project structure
+  - **Description**: Set up basic project structure and core components
+  - **Priority**: High
+  - **Status**: Resolved
+  - **Date Resolved**: 2025-07-30
+
+## Issue Tracking Guidelines
+
+1. **Severity Levels**:
+   - **Critical**: System crashes, data loss, security vulnerabilities
+   - **High**: Major functionality broken, significant performance issues
+   - **Medium**: Minor functionality issues, usability problems
+   - **Low**: Cosmetic issues, documentation improvements
+
+2. **Status Types**:
+   - **Open**: Issue reported but not yet addressed
+   - **In Progress**: Currently being worked on
+   - **Testing**: Fix implemented, awaiting verification
+   - **Resolved**: Issue has been fixed and verified
+   - **Closed**: Issue resolved or deemed not applicable
+
+3. **Priority Guidelines**:
+   - **Critical**: Fix immediately
+   - **High**: Fix in current sprint/release
+   - **Medium**: Fix in next release
+   - **Low**: Fix when time permits
+
+## Contact for Issues
+
+For urgent issues or security vulnerabilities:
+- Email: founder@cognitiveinsight.ai
+- Security issues: Please follow responsible disclosure practices
+
+For general bugs and feature requests:
+- Use this issues tracker
+- Submit via GitHub Issues (when repository is public)
+
+---
+
+**Note**: This is a local issue tracker. For production use, consider migrating to GitHub Issues or a dedicated issue tracking system.

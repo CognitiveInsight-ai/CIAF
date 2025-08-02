@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ciaf"
+version = "0.1.0"
+description = "Cognitive Insight AI Framework (CIAF) - A modular framework for verifiable AI with provenance tracking."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "CIAF Development Team", email = "Founder@CognitiveInsight.AI"}
+]
+maintainers = [
+    {name = "CIAF Development Team", email = "Founder@CognitiveInsight.AI"}
+]
+keywords = [
+    "ciaf",
+    "cognitive", 
+    "insight",
+    "ai",
+    "artificial-intelligence",
+    "framework",
+    "provenance",
+    "transparency",
+    "cryptography"
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Modified MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+requires-python = ">=3.8"
+dependencies = [
+    "cryptography>=3.4",
+]
+
+[project.urls]
+Homepage = "https://github.com/CognitiveInsight-ai/CIAF"
+Repository = "https://github.com/CognitiveInsight-ai/CIAF"
+Documentation = "https://github.com/CognitiveInsight-ai/CIAF#readme"
+"Bug Tracker" = "https://github.com/CognitiveInsight-ai/CIAF/issues"
+
+[tool.setuptools]
+packages = ["ciaf"]
+
+[tool.setuptools.package-dir]
+ciaf = "ciaf"
+
+[tool.setuptools.dynamic]
+# If you want to keep some fields dynamic, you can specify them here
+# For now, everything is static in the [project] section
