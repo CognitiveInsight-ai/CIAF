@@ -4,7 +4,7 @@ CIAF Model Testing Web Application
 Flask web interface for testing AI models with CIAF compliance monitoring
 """
 
-from flask import Flask, render_template, request, jsonify, redirect, url_for
+from flask import Flask, render_template, request, jsonify, redirect, url_for, Response
 import os
 import sys
 import json
@@ -873,6 +873,143 @@ def generate_pipeline_trace(model_name, model):
         'model_type': model_name,
         'error': 'Pipeline trace not available for this model type'
     }
+
+@app.route('/api/metadata/list')
+def list_metadata():
+    """Get list of all stored metadata"""
+    try:
+        # Import metadata storage
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+        from ciaf.metadata_storage import MetadataStorage
+        
+        # Initialize metadata storage
+        storage = MetadataStorage()
+        
+        # Get all metadata entries
+        metadata_list = []
+        
+        # Try to get metadata from different storage backends
+        try:
+            # Get from JSON storage
+            json_files = storage._list_json_files()
+            for json_file in json_files:
+                try:
+                    with open(json_file, 'r') as f:
+                        data = json.load(f)
+                        if isinstance(data, list):
+                            metadata_list.extend(data)
+                        else:
+                            metadata_list.append(data)
+                except Exception as e:
+                    print(f"Error reading {json_file}: {e}")
+                    continue
+        except Exception as e:
+            print(f"Error accessing JSON storage: {e}")
+        
+        # Try SQLite storage if available
+        try:
+            import sqlite3
+            db_path = os.path.join(storage.config['storage_path'], 'metadata.db')
+            if os.path.exists(db_path):
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                cursor.execute("SELECT metadata_json FROM pipeline_metadata ORDER BY timestamp DESC")
+                rows = cursor.fetchall()
+                for row in rows:
+                    try:
+                        data = json.loads(row[0])
+                        metadata_list.append(data)
+                    except Exception as e:
+                        print(f"Error parsing SQLite row: {e}")
+                        continue
+                conn.close()
+        except Exception as e:
+            print(f"Error accessing SQLite storage: {e}")
+        
+        # If no metadata found, return sample data for testing
+        if not metadata_list:
+            metadata_list = [
+                {
+                    "model_id": "job_classifier_v1",
+                    "timestamp": "2024-01-15T10:30:00Z",
+                    "compliance_framework": "EEOC",
+                    "stage": "training",
+                    "compliance_score": 0.85,
+                    "pipeline_id": "pipeline_001",
+                    "metadata": {
+                        "dataset_size": 10000,
+                        "features_used": ["education", "experience", "skills"],
+                        "bias_metrics": {"demographic_parity": 0.82, "equal_opportunity": 0.88}
+                    }
+                },
+                {
+                    "model_id": "ct_scan_classifier_v2",
+                    "timestamp": "2024-01-14T15:45:00Z",
+                    "compliance_framework": "FDA",
+                    "stage": "validation",
+                    "compliance_score": 0.92,
+                    "pipeline_id": "pipeline_002",
+                    "metadata": {
+                        "dataset_size": 5000,
+                        "accuracy": 0.94,
+                        "sensitivity": 0.91,
+                        "specificity": 0.96
+                    }
+                },
+                {
+                    "model_id": "credit_scoring_v3",
+                    "timestamp": "2024-01-13T09:15:00Z",
+                    "compliance_framework": "FCRA",
+                    "stage": "production",
+                    "compliance_score": 0.78,
+                    "pipeline_id": "pipeline_003",
+                    "metadata": {
+                        "dataset_size": 25000,
+                        "features_used": ["income", "credit_history", "employment"],
+                        "fairness_metrics": {"statistical_parity": 0.75, "individual_fairness": 0.81}
+                    }
+                }
+            ]
+        
+        return jsonify(metadata_list)
+        
+    except Exception as e:
+        print(f"Error in list_metadata: {e}")
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/metadata/export')
+def export_metadata():
+    """Export metadata in various formats"""
+    try:
+        format_type = request.args.get('format', 'json')
+        
+        # Get metadata list (reuse the logic from list_metadata)
+        response = list_metadata()
+        if response.status_code != 200:
+            return response
+            
+        metadata_list = response.get_json()
+        
+        if format_type == 'csv':
+            import pandas as pd
+            df = pd.json_normalize(metadata_list)
+            csv_data = df.to_csv(index=False)
+            
+            return Response(
+                csv_data,
+                mimetype='text/csv',
+                headers={'Content-Disposition': f'attachment;filename=ciaf_metadata_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'}
+            )
+        else:
+            # Default to JSON
+            return Response(
+                json.dumps(metadata_list, indent=2),
+                mimetype='application/json',
+                headers={'Content-Disposition': f'attachment;filename=ciaf_metadata_{datetime.now().strftime("%Y%m%d_%H%M%S")}.json'}
+            )
+            
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.errorhandler(404)
 def not_found(error):

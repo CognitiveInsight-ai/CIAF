@@ -212,3 +212,8 @@ PatentDocs/
 *.patent.md
 *.patent.pdf
 *_Patent.*
+
+# Test file for web app
+# This file is used to test the web application functionality and should not be ignored.
+/ciaf_metadata
+/ciaf_metadata_demo

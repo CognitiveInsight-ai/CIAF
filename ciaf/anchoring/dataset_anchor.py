@@ -68,17 +68,31 @@ class DatasetAnchor:
         # Initialize sample tracking
         self.sample_hashes: List[str] = []
         self.total_samples = 0
+        self.training_samples = 0
+        self.testing_samples = 0
+        
+        # Track capsulation status by phase
+        self.capsulation_status = {
+            'full_dataset': {'total': 0, 'capsulated': 0, 'percentage': 0.0},
+            'training_phase': {'total': 0, 'capsulated': 0, 'percentage': 0.0},
+            'testing_phase': {'total': 0, 'capsulated': 0, 'percentage': 0.0}
+        }
         
         # Initialize data items tracking for lazy management
         self.data_items: Dict[str, Dict[str, Any]] = {}
         
-        # Add anchoring metadata
+        # Add anchoring metadata with capsulation notes
         self.metadata.update({
             'dataset_anchor_id': self.dataset_id,
             'master_key_salt': self.master_key_salt.hex(),
             'dataset_hash': self.dataset_hash,
             'creation_timestamp': datetime.now().isoformat(),
-            'audit_tags': ['lazy_capsules', 'anchored_merkle_root', 'dataset_level_derivation']
+            'audit_tags': ['lazy_capsules', 'anchored_merkle_root', 'dataset_level_derivation'],
+            'capsulation_notes': {
+                'train_test_split_impact': 'Capsulation percentages reflect subset used in each phase due to random train/test split',
+                'recommendation': 'Perform bias and quality validation on full dataset before train/test split',
+                'validation_required': 'Use pre_ingestion_validator before splitting data'
+            }
         })
         
         print(f"Dataset Anchor '{self.dataset_id}' initialized for model '{self.model_name}'")
@@ -110,7 +124,7 @@ class DatasetAnchor:
             self.sample_hashes.append(sample_hash)
             self.total_samples = len(self.sample_hashes)
     
-    def add_data_item(self, item_id: str, content: Any, metadata: Dict[str, Any]) -> None:
+    def add_data_item(self, item_id: str, content: Any, metadata: Dict[str, Any], phase: str = 'full_dataset') -> None:
         """
         Add a data item to the dataset for lazy capsule management.
         
@@ -118,11 +132,23 @@ class DatasetAnchor:
             item_id: Unique identifier for the data item
             content: The data content (string, float, int, or other)
             metadata: Metadata about the data item
+            phase: Dataset phase ('full_dataset', 'training_phase', 'testing_phase')
         """
         self.data_items[item_id] = {
             'content': content,
-            'metadata': metadata.copy()
+            'metadata': metadata.copy(),
+            'phase': phase
         }
+        
+        # Update capsulation tracking for the specific phase
+        if phase in self.capsulation_status:
+            self.capsulation_status[phase]['total'] += 1
+            self.capsulation_status[phase]['capsulated'] += 1  # Assume capsulated when added
+            
+            # Update percentage
+            total = self.capsulation_status[phase]['total']
+            capsulated = self.capsulation_status[phase]['capsulated']
+            self.capsulation_status[phase]['percentage'] = (capsulated / total * 100) if total > 0 else 0.0
         
         # Also add to sample hashes for Merkle tree - handle different data types
         if isinstance(content, (str, bytes)):
@@ -133,6 +159,54 @@ class DatasetAnchor:
             
         item_hash = sha256_hash(f"{item_id}:{content_str}".encode('utf-8'))
         self.add_sample_hash(item_hash)
+        
+        # Track by phase
+        if phase == 'training_phase':
+            self.training_samples += 1
+        elif phase == 'testing_phase':
+            self.testing_samples += 1
+    
+    def set_phase_totals(self, training_total: int, testing_total: int) -> None:
+        """
+        Set the expected totals for training and testing phases.
+        
+        This should be called after train/test split to set accurate totals.
+        
+        Args:
+            training_total: Total number of training samples expected
+            testing_total: Total number of testing samples expected
+        """
+        self.capsulation_status['training_phase']['total'] = training_total
+        self.capsulation_status['testing_phase']['total'] = testing_total
+        
+        # Recalculate percentages
+        for phase in ['training_phase', 'testing_phase']:
+            total = self.capsulation_status[phase]['total']
+            capsulated = self.capsulation_status[phase]['capsulated']
+            self.capsulation_status[phase]['percentage'] = (capsulated / total * 100) if total > 0 else 0.0
+        
+        print(f"📊 Phase totals set - Training: {training_total}, Testing: {testing_total}")
+    
+    def get_capsulation_summary(self) -> Dict[str, Any]:
+        """
+        Get a summary of capsulation status across all phases.
+        
+        Returns:
+            Dictionary with capsulation statistics and notes
+        """
+        return {
+            'capsulation_status': self.capsulation_status.copy(),
+            'total_items_tracked': len(self.data_items),
+            'merkle_tree_samples': len(self.sample_hashes),
+            'split_impact_note': (
+                "Capsulation percentages may be less than 100% due to random train/test split. "
+                "Only samples used in each phase are capsulated for that phase."
+            ),
+            'recommendation': (
+                "Validate complete dataset for bias and quality issues before train/test split "
+                "using pre_ingestion_validator to ensure representative sampling."
+            )
+        }
     
     def derive_item_key(self, item_id: str) -> str:
         """

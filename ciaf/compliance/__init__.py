@@ -109,6 +109,12 @@ from .cybersecurity import (
     CybersecurityComplianceEngine
 )
 
+from .pre_ingestion_validator import (
+    ValidationIssue,
+    BiasDetectionResult,
+    PreIngestionValidator
+)
+
 __all__ = [
     # Audit Trails
     "AuditEventType",
@@ -153,5 +159,10 @@ __all__ = [
     "AlgorithmicTransparencyMetrics",
     "DecisionExplanation",
     "TransparencyReport",
-    "TransparencyReportGenerator"
+    "TransparencyReportGenerator",
+    
+    # Pre-Ingestion Validation
+    "ValidationIssue",
+    "BiasDetectionResult", 
+    "PreIngestionValidator"
 ]

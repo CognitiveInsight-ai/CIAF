@@ -547,6 +547,23 @@ class MetadataStorage:
                         if file_path.stat().st_mtime < cutoff_date.timestamp():
                             file_path.unlink()
 
+    def _list_json_files(self) -> List[Path]:
+        """List all JSON metadata files in the storage directory."""
+        json_files = []
+        for model_dir in self.storage_path.iterdir():
+            if model_dir.is_dir():
+                json_files.extend(model_dir.glob("*.json"))
+        return json_files
+
+    @property
+    def config(self) -> Dict[str, Any]:
+        """Get storage configuration."""
+        return {
+            'storage_path': str(self.storage_path),
+            'backend': self.backend,
+            'db_path': str(self.db_path) if hasattr(self, 'db_path') else None
+        }
+
 
 # Global metadata storage instance
 _global_storage = None
