@@ -62,6 +62,11 @@ class RegulatoryMapper:
         self._initialize_gdpr()
         self._initialize_hipaa()
         self._initialize_sox()
+        self._initialize_iso_27001()
+        self._initialize_pci_dss()
+        self._initialize_ccpa()
+        self._initialize_fda_ai_ml()
+        self._initialize_fair_lending()
         self._initialize_general()
     
     def _initialize_eu_ai_act(self):
@@ -425,6 +430,241 @@ class RegulatoryMapper:
             )
         ]
     
+    def _initialize_iso_27001(self):
+        """Initialize ISO 27001 Information Security Management requirements."""
+        self.requirements[ComplianceFramework.ISO_27001] = [
+            ComplianceRequirement(
+                requirement_id="ISO_27001_001",
+                framework=ComplianceFramework.ISO_27001,
+                title="Information Security Management System (ISMS)",
+                description="Establish, implement, maintain and continually improve an ISMS",
+                category="Management System",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "audit_trails",
+                    "risk_assessment",
+                    "security_controls"
+                ],
+                implementation_notes="CIAF provides comprehensive audit trails supporting ISMS requirements",
+                verification_method="ISMS documentation and effectiveness assessment",
+                documentation_required=[
+                    "isms_documentation",
+                    "security_policy",
+                    "risk_assessment_report"
+                ],
+                risk_level="high"
+            ),
+            ComplianceRequirement(
+                requirement_id="ISO_27001_002",
+                framework=ComplianceFramework.ISO_27001,
+                title="Risk Assessment and Treatment",
+                description="Conduct information security risk assessments and implement appropriate treatments",
+                category="Risk Management",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "risk_assessment",
+                    "security_monitoring",
+                    "audit_trails"
+                ],
+                implementation_notes="CIAF risk assessment capabilities align with ISO 27001 requirements",
+                verification_method="Risk assessment process validation and documentation",
+                documentation_required=[
+                    "risk_assessment_methodology",
+                    "risk_treatment_plan",
+                    "risk_register"
+                ],
+                risk_level="high"
+            ),
+            ComplianceRequirement(
+                requirement_id="ISO_27001_003",
+                framework=ComplianceFramework.ISO_27001,
+                title="Access Control",
+                description="Manage access to information and information processing facilities",
+                category="Access Control",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "access_control",
+                    "audit_trails",
+                    "identity_management"
+                ],
+                implementation_notes="CIAF audit trails provide access control monitoring",
+                verification_method="Access control effectiveness testing",
+                documentation_required=[
+                    "access_control_policy",
+                    "user_access_matrix",
+                    "access_logs"
+                ],
+                risk_level="medium"
+            ),
+            ComplianceRequirement(
+                requirement_id="ISO_27001_004",
+                framework=ComplianceFramework.ISO_27001,
+                title="Cryptography",
+                description="Implement appropriate cryptographic controls",
+                category="Cryptography",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "cryptographic_integrity",
+                    "key_management",
+                    "data_encryption"
+                ],
+                implementation_notes="CIAF uses cryptographic techniques for data integrity and security",
+                verification_method="Cryptographic implementation validation",
+                documentation_required=[
+                    "cryptographic_policy",
+                    "key_management_procedures",
+                    "encryption_standards"
+                ],
+                risk_level="high"
+            ),
+            ComplianceRequirement(
+                requirement_id="ISO_27001_005",
+                framework=ComplianceFramework.ISO_27001,
+                title="Monitoring and Measurement",
+                description="Monitor, measure, analyze and evaluate information security performance",
+                category="Monitoring",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "continuous_monitoring",
+                    "security_metrics",
+                    "audit_trails"
+                ],
+                implementation_notes="CIAF provides continuous monitoring and security metrics",
+                verification_method="Monitoring process effectiveness assessment",
+                documentation_required=[
+                    "monitoring_procedures",
+                    "security_metrics_report",
+                    "performance_indicators"
+                ],
+                risk_level="medium"
+            ),
+            ComplianceRequirement(
+                requirement_id="ISO_27001_006",
+                framework=ComplianceFramework.ISO_27001,
+                title="Incident Management",
+                description="Manage information security incidents effectively",
+                category="Incident Management",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "incident_detection",
+                    "audit_trails",
+                    "forensic_analysis"
+                ],
+                implementation_notes="CIAF audit trails support incident detection and forensic analysis",
+                verification_method="Incident management process validation",
+                documentation_required=[
+                    "incident_response_plan",
+                    "incident_logs",
+                    "lessons_learned_report"
+                ],
+                risk_level="medium"
+            )
+        ]
+    
+    def _initialize_pci_dss(self):
+        """Initialize PCI DSS Payment Card Industry requirements."""
+        self.requirements[ComplianceFramework.PCI_DSS] = [
+            ComplianceRequirement(
+                requirement_id="PCI_DSS_001",
+                framework=ComplianceFramework.PCI_DSS,
+                title="Build and Maintain Secure Network",
+                description="Install and maintain a firewall configuration to protect cardholder data",
+                category="Network Security",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "network_monitoring",
+                    "security_controls",
+                    "audit_trails"
+                ],
+                implementation_notes="CIAF security monitoring supports PCI DSS network requirements",
+                verification_method="Network security configuration validation",
+                documentation_required=[
+                    "firewall_configuration",
+                    "network_diagram",
+                    "security_standards"
+                ],
+                risk_level="high"
+            )
+        ]
+    
+    def _initialize_ccpa(self):
+        """Initialize California Consumer Privacy Act requirements."""
+        self.requirements[ComplianceFramework.CCPA] = [
+            ComplianceRequirement(
+                requirement_id="CCPA_001",
+                framework=ComplianceFramework.CCPA,
+                title="Consumer Rights",
+                description="Provide consumers with rights regarding their personal information",
+                category="Consumer Rights",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "data_governance",
+                    "audit_trails",
+                    "privacy_controls"
+                ],
+                implementation_notes="CIAF data governance supports CCPA consumer rights",
+                verification_method="Consumer rights implementation validation",
+                documentation_required=[
+                    "privacy_policy",
+                    "consumer_request_procedures",
+                    "data_inventory"
+                ],
+                risk_level="medium"
+            )
+        ]
+    
+    def _initialize_fda_ai_ml(self):
+        """Initialize FDA AI/ML Device requirements."""
+        self.requirements[ComplianceFramework.FDA_AI_ML] = [
+            ComplianceRequirement(
+                requirement_id="FDA_AI_ML_001",
+                framework=ComplianceFramework.FDA_AI_ML,
+                title="Software as Medical Device (SaMD)",
+                description="Implement quality management for AI/ML-based medical devices",
+                category="Medical Device",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "model_validation",
+                    "audit_trails",
+                    "quality_management"
+                ],
+                implementation_notes="CIAF validation processes support FDA AI/ML requirements",
+                verification_method="Medical device validation documentation",
+                documentation_required=[
+                    "software_validation_plan",
+                    "clinical_evaluation",
+                    "risk_analysis"
+                ],
+                risk_level="high"
+            )
+        ]
+    
+    def _initialize_fair_lending(self):
+        """Initialize Fair Lending Act requirements."""
+        self.requirements[ComplianceFramework.FAIR_LENDING] = [
+            ComplianceRequirement(
+                requirement_id="FAIR_LENDING_001",
+                framework=ComplianceFramework.FAIR_LENDING,
+                title="Discriminatory Practices Prevention",
+                description="Prevent discriminatory lending practices",
+                category="Fair Lending",
+                mandatory=True,
+                ciaf_capabilities=[
+                    "bias_detection",
+                    "fairness_assessment",
+                    "audit_trails"
+                ],
+                implementation_notes="CIAF bias detection supports fair lending compliance",
+                verification_method="Bias assessment and fairness testing",
+                documentation_required=[
+                    "fair_lending_policy",
+                    "bias_testing_report",
+                    "monitoring_procedures"
+                ],
+                risk_level="high"
+            )
+        ]
+
     def _initialize_general(self):
         """Initialize general best practices requirements."""
         self.requirements[ComplianceFramework.GENERAL] = [

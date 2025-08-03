@@ -223,13 +223,17 @@ def api_predict(model_name):
             input_scaled = model.scaler.transform(input_data)
             predictions, uncertainties = model.predict_with_uncertainty(input_scaled)
             
+            # Calculate fairness score from model's fairness metrics
+            fairness_score = model.fairness_metrics.get('demographic_parity', 0.85) if hasattr(model, 'fairness_metrics') and model.fairness_metrics else 0.85
+            
             result = {
                 'model_type': 'Job Classifier',
                 'hire_probability': float(predictions[0][1]),
                 'uncertainty': float(uncertainties[0]),
                 'decision': 'HIRE' if predictions[0][1] > 0.5 else 'NO HIRE',
                 'compliance_score': model.compliance_score,
-                'bias_score': model.bias_score
+                'bias_score': model.bias_score,
+                'fairness_score': fairness_score
             }
             
         elif model_name == 'ct_scan':
@@ -405,7 +409,21 @@ def generate_pipeline_trace(model_name, model):
                             'consistency': 0.98,
                             'timeliness': 0.92
                         }
-                    }
+                    },
+                    'compliance_annotations': {
+                        'overall_compliance_score': 0.96,
+                        'frameworks_assessed': ['GDPR', 'EEOC'],
+                        'automation_level': 1.0,
+                        'last_assessment': timestamp
+                    },
+                    'regulatory_mappings': [
+                        {
+                            'framework': 'GDPR',
+                            'requirements_met': 5,
+                            'total_requirements': 5,
+                            'compliance_percentage': 100
+                        }
+                    ]
                 },
                 {
                     'stage_id': 'preprocessing',
@@ -429,7 +447,21 @@ def generate_pipeline_trace(model_name, model):
                             'source_stage': 'input',
                             'transformation_log': ['normalize_education', 'encode_categorical', 'scale_numerical']
                         }
-                    }
+                    },
+                    'compliance_annotations': {
+                        'overall_compliance_score': 0.93,
+                        'frameworks_assessed': ['EEOC', 'Fair Hiring Act'],
+                        'automation_level': 0.95,
+                        'last_assessment': timestamp
+                    },
+                    'regulatory_mappings': [
+                        {
+                            'framework': 'EEOC',
+                            'requirements_met': 3,
+                            'total_requirements': 4,
+                            'compliance_percentage': 75
+                        }
+                    ]
                 },
                 {
                     'stage_id': 'model_training',
@@ -460,7 +492,27 @@ def generate_pipeline_trace(model_name, model):
                             'fairness_constraints': 'enforced',
                             'explainability_requirements': 'met'
                         }
-                    }
+                    },
+                    'compliance_annotations': {
+                        'overall_compliance_score': 0.89,
+                        'frameworks_assessed': ['EEOC', 'Fair Hiring Act', 'Model Governance'],
+                        'automation_level': 0.92,
+                        'last_assessment': timestamp
+                    },
+                    'regulatory_mappings': [
+                        {
+                            'framework': 'EEOC',
+                            'requirements_met': 7,
+                            'total_requirements': 8,
+                            'compliance_percentage': 87
+                        },
+                        {
+                            'framework': 'Fair Hiring Act',
+                            'requirements_met': 5,
+                            'total_requirements': 6,
+                            'compliance_percentage': 83
+                        }
+                    ]
                 },
                 {
                     'stage_id': 'inference',
@@ -499,7 +551,27 @@ def generate_pipeline_trace(model_name, model):
                             'shap_values_available': True,
                             'lime_explanation_generated': True
                         }
-                    }
+                    },
+                    'compliance_annotations': {
+                        'overall_compliance_score': 0.91,
+                        'frameworks_assessed': ['EEOC', 'GDPR', 'Bias Monitoring'],
+                        'automation_level': 0.88,
+                        'last_assessment': timestamp
+                    },
+                    'regulatory_mappings': [
+                        {
+                            'framework': 'EEOC',
+                            'requirements_met': 6,
+                            'total_requirements': 7,
+                            'compliance_percentage': 86
+                        },
+                        {
+                            'framework': 'GDPR',
+                            'requirements_met': 8,
+                            'total_requirements': 9,
+                            'compliance_percentage': 89
+                        }
+                    ]
                 },
                 {
                     'stage_id': 'audit_trail',
@@ -533,7 +605,27 @@ def generate_pipeline_trace(model_name, model):
                             'impact_assessment': 'low_risk',
                             'mitigation_measures': ['human_oversight', 'appeal_process']
                         }
-                    }
+                    },
+                    'compliance_annotations': {
+                        'overall_compliance_score': 0.94,
+                        'frameworks_assessed': ['EEOC', 'GDPR', 'Fair Hiring Act', 'SOX'],
+                        'automation_level': 0.98,
+                        'last_assessment': timestamp
+                    },
+                    'regulatory_mappings': [
+                        {
+                            'framework': 'EEOC',
+                            'requirements_met': 8,
+                            'total_requirements': 10,
+                            'compliance_percentage': 80
+                        },
+                        {
+                            'framework': 'GDPR',
+                            'requirements_met': 12,
+                            'total_requirements': 12,
+                            'compliance_percentage': 100
+                        }
+                    ]
                 }
             ],
             'compliance_metrics': {
@@ -1010,6 +1102,337 @@ def export_metadata():
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@app.route('/api/compliance/framework/<framework_name>')
+def api_compliance_framework(framework_name):
+    """Get compliance framework overview"""
+    try:
+        # Import CIAF compliance components
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+        from ciaf.compliance.regulatory_mapping import RegulatoryMapper, ComplianceFramework
+        
+        mapper = RegulatoryMapper()
+        
+        if framework_name == 'all':
+            # Return all frameworks
+            all_frameworks = [
+                ComplianceFramework.EU_AI_ACT,
+                ComplianceFramework.NIST_AI_RMF,
+                ComplianceFramework.GDPR,
+                ComplianceFramework.HIPAA,
+                ComplianceFramework.SOX,
+                ComplianceFramework.ISO_27001
+            ]
+            
+            framework_data = []
+            for framework in all_frameworks:
+                coverage = mapper.get_ciaf_coverage([framework])
+                framework_info = generate_framework_overview(framework, coverage)
+                framework_data.append(framework_info)
+            
+            return jsonify(framework_data)
+        else:
+            # Return specific framework
+            try:
+                framework_enum = getattr(ComplianceFramework, framework_name.upper())
+                coverage = mapper.get_ciaf_coverage([framework_enum])
+                framework_info = generate_framework_overview(framework_enum, coverage)
+                return jsonify(framework_info)
+            except AttributeError:
+                return jsonify({'error': f'Framework {framework_name} not supported'}), 400
+                
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/compliance/mapping/<model_name>/<framework_name>')
+def api_compliance_mapping(model_name, framework_name):
+    """Get compliance mapping for model and framework"""
+    try:
+        # Import CIAF compliance components
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+        from ciaf.compliance.regulatory_mapping import RegulatoryMapper, ComplianceFramework
+        
+        mapper = RegulatoryMapper()
+        
+        try:
+            framework_enum = getattr(ComplianceFramework, framework_name.upper())
+        except AttributeError:
+            return jsonify({'error': f'Framework {framework_name} not supported'}), 400
+        
+        # Generate compliance mapping for model stages
+        mapping_data = generate_compliance_mapping(model_name, framework_enum, mapper)
+        return jsonify(mapping_data)
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/compliance/report/<framework_name>', methods=['POST'])
+def api_compliance_report(framework_name):
+    """Generate compliance report for framework"""
+    try:
+        # Import CIAF compliance components
+        sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+        from ciaf.compliance.reports import ComplianceReportGenerator, ReportType
+        
+        report_generator = ComplianceReportGenerator("WebDashboard")
+        
+        # Generate comprehensive compliance report
+        report_data = {
+            'framework': framework_name,
+            'timestamp': datetime.now().isoformat(),
+            'models_assessed': list(models.keys()),
+            'compliance_summary': 'Generated via CIAF Web Dashboard'
+        }
+        
+        # For now, return JSON report (can be extended to PDF)
+        return jsonify({
+            'status': 'success',
+            'report_id': f'RPT_{framework_name}_{int(datetime.now().timestamp())}',
+            'report_data': report_data,
+            'download_url': f'/api/compliance/download/{framework_name}'
+        })
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def generate_framework_overview(framework, coverage_data):
+    """Generate framework overview data"""
+    from datetime import datetime, timedelta
+    import random
+    
+    framework_info = {
+        'framework_id': framework.value,
+        'framework_name': framework.value.replace('_', ' ').title(),
+        'overall_score': coverage_data['overall_coverage']['coverage_percentage'] / 100,
+        'total_requirements': coverage_data['overall_coverage']['total_requirements'],
+        'met_requirements': coverage_data['overall_coverage']['satisfied_requirements'],
+        'automation_level': random.uniform(0.8, 0.95),  # Mock automation level
+        'last_assessment': (datetime.now() - timedelta(days=random.randint(1, 30))).isoformat(),
+        'requirements': []
+    }
+    
+    # Add sample requirements based on framework
+    if framework.value == 'eu_ai_act':
+        framework_info['requirements'] = [
+            {'title': 'Risk Management System', 'status': 'met'},
+            {'title': 'Data Governance', 'status': 'met'},
+            {'title': 'Transparency & Documentation', 'status': 'met'},
+            {'title': 'Human Oversight', 'status': 'partial'},
+            {'title': 'Accuracy & Robustness', 'status': 'met'},
+            {'title': 'Cybersecurity', 'status': 'met'}
+        ]
+    elif framework.value == 'nist_ai_rmf':
+        framework_info['requirements'] = [
+            {'title': 'Govern Function', 'status': 'met'},
+            {'title': 'Map Function', 'status': 'met'},
+            {'title': 'Measure Function', 'status': 'met'},
+            {'title': 'Manage Function', 'status': 'partial'},
+            {'title': 'Risk Assessment', 'status': 'met'}
+        ]
+    elif framework.value == 'gdpr':
+        framework_info['requirements'] = [
+            {'title': 'Data Protection by Design', 'status': 'met'},
+            {'title': 'Consent Management', 'status': 'met'},
+            {'title': 'Right to Explanation', 'status': 'met'},
+            {'title': 'Data Minimization', 'status': 'partial'},
+            {'title': 'Breach Notification', 'status': 'met'}
+        ]
+    else:
+        # Generic requirements for other frameworks
+        framework_info['requirements'] = [
+            {'title': 'Compliance Documentation', 'status': 'met'},
+            {'title': 'Audit Trail Management', 'status': 'met'},
+            {'title': 'Risk Assessment', 'status': 'partial'},
+            {'title': 'Data Security', 'status': 'met'}
+        ]
+    
+    return framework_info
+
+def generate_compliance_mapping(model_name, framework, mapper):
+    """Generate compliance mapping for model stages"""
+    
+    # Get pipeline stages for the model
+    if model_name not in models:
+        raise ValueError(f'Model {model_name} not found')
+    
+    # Define stage mappings based on model type
+    stage_mappings = {
+        'job_classifier': [
+            {
+                'stage_id': 'data_input',
+                'stage_name': 'Data Input & Collection',
+                'compliance_status': 'compliant',
+                'requirements': get_stage_requirements(framework, 'data_input')
+            },
+            {
+                'stage_id': 'data_preprocessing',
+                'stage_name': 'Data Preprocessing',
+                'compliance_status': 'compliant',
+                'requirements': get_stage_requirements(framework, 'preprocessing')
+            },
+            {
+                'stage_id': 'model_training',
+                'stage_name': 'Model Training',
+                'compliance_status': 'partial',
+                'requirements': get_stage_requirements(framework, 'training')
+            },
+            {
+                'stage_id': 'model_inference',
+                'stage_name': 'Model Inference',
+                'compliance_status': 'compliant',
+                'requirements': get_stage_requirements(framework, 'inference')
+            }
+        ],
+        'ct_scan': [
+            {
+                'stage_id': 'medical_input',
+                'stage_name': 'Medical Image Input',
+                'compliance_status': 'compliant',
+                'requirements': get_stage_requirements(framework, 'medical_input')
+            },
+            {
+                'stage_id': 'image_preprocessing',
+                'stage_name': 'Image Preprocessing',
+                'compliance_status': 'compliant',
+                'requirements': get_stage_requirements(framework, 'medical_preprocessing')
+            },
+            {
+                'stage_id': 'diagnostic_inference',
+                'stage_name': 'Diagnostic Inference',
+                'compliance_status': 'compliant',
+                'requirements': get_stage_requirements(framework, 'medical_inference')
+            }
+        ],
+        'credit_scoring': [
+            {
+                'stage_id': 'financial_input',
+                'stage_name': 'Financial Data Input',
+                'compliance_status': 'compliant',
+                'requirements': get_stage_requirements(framework, 'financial_input')
+            },
+            {
+                'stage_id': 'risk_assessment',
+                'stage_name': 'Risk Assessment',
+                'compliance_status': 'partial',
+                'requirements': get_stage_requirements(framework, 'financial_assessment')
+            },
+            {
+                'stage_id': 'credit_decision',
+                'stage_name': 'Credit Decision',
+                'compliance_status': 'compliant',
+                'requirements': get_stage_requirements(framework, 'financial_decision')
+            }
+        ]
+    }
+    
+    stages = stage_mappings.get(model_name, stage_mappings['job_classifier'])
+    
+    return {
+        'model_name': model_name,
+        'framework': framework.value,
+        'framework_name': framework.value.replace('_', ' ').title(),
+        'stages': stages,
+        'overall_compliance': 'partial',
+        'last_updated': datetime.now().isoformat()
+    }
+
+def get_stage_requirements(framework, stage_type):
+    """Get compliance requirements for a specific stage and framework"""
+    
+    # Define requirements based on framework and stage
+    requirements_map = {
+        'eu_ai_act': {
+            'data_input': [
+                {
+                    'requirement_id': 'EU_AI_ACT_001',
+                    'title': 'Data Quality Management',
+                    'description': 'Ensure high-quality training, validation and testing data sets',
+                    'ciaf_method': 'DatasetAnchor with integrity verification',
+                    'coverage_level': 'Full',
+                    'automation_status': 'Automated'
+                },
+                {
+                    'requirement_id': 'EU_AI_ACT_002',
+                    'title': 'Data Bias Assessment',
+                    'description': 'Identify and mitigate bias in training data',
+                    'ciaf_method': 'BiasValidator with fairness metrics',
+                    'coverage_level': 'Full',
+                    'automation_status': 'Automated'
+                }
+            ],
+            'preprocessing': [
+                {
+                    'requirement_id': 'EU_AI_ACT_003',
+                    'title': 'Data Lineage Tracking',
+                    'description': 'Maintain complete data processing lineage',
+                    'ciaf_method': 'ProvenanceCapsule tracking',
+                    'coverage_level': 'Full',
+                    'automation_status': 'Automated'
+                }
+            ],
+            'training': [
+                {
+                    'requirement_id': 'EU_AI_ACT_004',
+                    'title': 'Model Documentation',
+                    'description': 'Comprehensive model documentation and version control',
+                    'ciaf_method': 'TrainingSnapshot with metadata',
+                    'coverage_level': 'Full',
+                    'automation_status': 'Automated'
+                }
+            ],
+            'inference': [
+                {
+                    'requirement_id': 'EU_AI_ACT_005',
+                    'title': 'Decision Transparency',
+                    'description': 'Provide explanations for AI decisions',
+                    'ciaf_method': 'InferenceReceipt with explanations',
+                    'coverage_level': 'Full',
+                    'automation_status': 'Automated'
+                }
+            ]
+        },
+        'nist_ai_rmf': {
+            'data_input': [
+                {
+                    'requirement_id': 'NIST_001',
+                    'title': 'AI System Inventory',
+                    'description': 'Maintain comprehensive AI system inventory',
+                    'ciaf_method': 'Model versioning and tracking',
+                    'coverage_level': 'Full',
+                    'automation_status': 'Automated'
+                }
+            ],
+            'training': [
+                {
+                    'requirement_id': 'NIST_002',
+                    'title': 'Performance Measurement',
+                    'description': 'Continuous performance monitoring and measurement',
+                    'ciaf_method': 'Audit trails with metrics',
+                    'coverage_level': 'Full',
+                    'automation_status': 'Automated'
+                }
+            ]
+        }
+    }
+    
+    # Get requirements for the framework and stage, with fallbacks
+    framework_reqs = requirements_map.get(framework.value, {})
+    stage_reqs = framework_reqs.get(stage_type, [])
+    
+    # If no specific requirements, provide generic ones
+    if not stage_reqs:
+        stage_reqs = [
+            {
+                'requirement_id': f'{framework.value.upper()}_GENERIC',
+                'title': f'{stage_type.title()} Compliance',
+                'description': f'General compliance requirements for {stage_type}',
+                'ciaf_method': 'CIAF audit trails and documentation',
+                'coverage_level': 'Partial',
+                'automation_status': 'Semi-automated'
+            }
+        ]
+    
+    return stage_reqs
 
 @app.errorhandler(404)
 def not_found(error):

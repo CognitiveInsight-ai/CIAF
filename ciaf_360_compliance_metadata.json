@@ -2,7 +2,7 @@
   "ciaf_compliance_framework": {
     "version": "2.1.0",
     "model_name": "JobClassificationModel_v2.1",
-    "assessment_date": "2025-08-02T16:43:33.057621+00:00",
+    "assessment_date": "2025-08-03T11:31:11.132382+00:00",
     "compliance_scope": "360\u00b0 AI Governance Coverage",
     "frameworks_covered": [
       "EU AI Act",
@@ -28,7 +28,7 @@
     },
     "method": "Monte Carlo Dropout",
     "iterations": 150,
-    "calculation_timestamp": "2025-08-02T16:43:33.055659+00:00",
+    "calculation_timestamp": "2025-08-03T11:31:11.130381+00:00",
     "entropy": 3.580572460791798,
     "explainability_ref": "shap_values_job_classification_001.json"
   },
@@ -37,7 +37,7 @@
     "nist_ai_rmf": "Govern function - Transparent AI system documentation",
     "accessibility_standards": "WCAG 2.1 AA compliance for inclusive access"
   },
-  "export_timestamp": "2025-08-02T16:43:33.056016+00:00",
+  "export_timestamp": "2025-08-03T11:31:11.130381+00:00",
   "total_actions": 1,
   "model_name": "JobClassificationModel_v2.1",
   "summary": {
@@ -91,14 +91,14 @@
   },
   "recent_actions": [
     {
-      "action_id": "CAL_20250802_05713671",
+      "action_id": "CAL_20250803_17FA19E1",
       "trigger": "Bias drift detected in gender classification > 15% threshold",
       "action_type": "Bias Correction",
       "status": "Verified",
-      "date_created": "2025-08-02T16:43:33.056161+00:00",
+      "date_created": "2025-08-03T11:31:11.130381+00:00",
       "linked_training_snapshot": "0764fec415c6d27c359bcd5a3248a1d13e9790fafa665e4205cc430b0f1846d1",
       "approver": "Chief Compliance Officer",
-      "approved_date": "2025-08-02T16:43:33.056161+00:00",
+      "approved_date": "2025-08-03T11:31:11.130381+00:00",
       "cost": {
         "estimated_cost": 35000.0,
         "actual_cost": 32500.0,
@@ -118,11 +118,11 @@
     "nist_ai_rmf": "Manage function - Risk response and remediation",
     "iso_27001": "A.16.1 - Management of information security incidents"
   },
-  "metadata_timestamp": "2025-08-02T16:43:33.057540+00:00",
-  "assessment_id": "CYBERASSESS_20250802_114333",
+  "metadata_timestamp": "2025-08-03T11:31:11.132382+00:00",
+  "assessment_id": "CYBERASSESS_20250803_063111",
   "impact_assessment_ref": "stakeholder_impact_analysis_2025-08.pdf",
-  "last_reviewed": "2025-08-02",
-  "next_review_date": "2026-08-02",
+  "last_reviewed": "2025-08-03",
+  "next_review_date": "2026-08-03",
   "responsible_party": "Ethics and Compliance Board",
   "lead_assessor": "Chief Ethics Officer",
   "overall_risk_level": "High",
@@ -168,8 +168,8 @@
   },
   "metadata": {
     "total_visualizations": 1,
-    "latest_visualization": "3D_PROV_JobClassificationModel_v2.1_20250802_114333",
-    "last_updated": "2025-08-02T16:43:33.056889+00:00"
+    "latest_visualization": "3D_PROV_JobClassificationModel_v2.1_20250803_063111",
+    "last_updated": "2025-08-03T11:31:11.131382+00:00"
   },
   "patent_protection": {
     "invention_claim": "Interactive 3D visualization of cryptographically anchored model metadata chains",
@@ -234,7 +234,7 @@
   },
   "remediation": {
     "total_recommendations": 0,
-    "next_assessment_date": "2026-08-02"
+    "next_assessment_date": "2026-08-03"
   },
   "integration_capabilities": {
     "siem_integration": [

@@ -477,6 +477,11 @@
             if (result.bias_score !== undefined) {
                 document.getElementById('bias-score').textContent = (result.bias_score * 100).toFixed(1) + '%';
             }
+            if (result.fairness_score !== undefined) {
+                document.getElementById('fairness-score').textContent = (result.fairness_score * 100).toFixed(1) + '%';
+            } else {
+                document.getElementById('fairness-score').textContent = '-';
+            }
             
             // Show results
             document.getElementById('results').style.display = 'block';
