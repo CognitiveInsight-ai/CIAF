@@ -19,6 +19,7 @@ CIAF provides a comprehensive chain of verifiable trust through its modular arch
 * **🔗 Provenance Tracking:** Complete lineage tracking from data ingestion through model training to inference
 * **🧠 ML Integration:** Seamless integration with machine learning frameworks and model wrappers
 * **⚡ Performance Optimized:** Lazy materialization providing 29,000x+ performance improvements over eager approaches
+* **🗜️ Compressed Storage:** Optimized metadata storage with 60-80% space savings and improved I/O performance
 * **🏗️ Modular Design:** Clean separation of concerns with independent, composable modules
 
 ## Installation
@@ -32,22 +33,84 @@ pip install ciaf
 Or for development:
 
 ```bash
-git clone https://github.com/your-github-username/ciaf.git
-cd ciaf
-pip install -e .
+git clone https://github.com/CognitiveInsight-ai/CIAF.git
+cd CIAF
+make install-dev
 ```
 
-## Quick Start
+Alternatively, you can use the setup script:
 
-### Drop-in Model Wrapper
+```bash
+python scripts/setup_dev_env.py
+```
 
-The easiest way to add CIAF transparency to your existing ML workflow:
+## Quick Examples
 
+### Basic Model Wrapper
 ```python
 from ciaf.wrappers import CIAFModelWrapper
 from sklearn.linear_model import LogisticRegression
 
 # Your existing model
+model = LogisticRegression()
+wrapped_model = CIAFModelWrapper(model, model_id="my_model")
+
+# Use normally - now with full CIAF tracking
+wrapped_model.fit(X_train, y_train)
+predictions = wrapped_model.predict(X_test)
+```
+
+### Compliance Monitoring
+```python
+from ciaf.compliance import ComplianceTracker, ComplianceFramework
+
+tracker = ComplianceTracker()
+tracker.track_compliance(
+    model_id="my_model",
+    frameworks=[ComplianceFramework.EU_AI_ACT, ComplianceFramework.GDPR]
+)
+```
+
+More examples available in the [`examples/`](examples/) directory:
+- [`examples/basic/`](examples/basic/) - Getting started examples
+- [`examples/compliance/`](examples/compliance/) - Regulatory compliance demos  
+- [`examples/industry/`](examples/industry/) - Industry-specific use cases
+- [`examples/advanced/`](examples/advanced/) - Advanced features and compressed metadata storage
+
+## Development
+
+### Metadata Migration
+To upgrade existing JSON metadata to compressed format for better performance:
+```bash
+python tools/metadata/migration.py --source-dir ciaf_metadata --target-dir ciaf_metadata_compressed
+```
+
+### Running Tests
+```bash
+# All tests
+make test
+
+# Unit tests only
+make test-unit
+
+# Integration tests only  
+make test-integration
+```
+
+### Code Quality
+```bash
+# Format code
+make format
+
+# Run linting
+make lint
+```
+
+### Documentation
+```bash
+# Build documentation
+make docs
+```
 model = LogisticRegression()
 
 # Wrap with CIAF

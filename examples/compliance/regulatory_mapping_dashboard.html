@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIAF Regulatory Compliance Mapping Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .dashboard {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-tab {
+            padding: 15px 25px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #6c757d;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-tab.active {
+            color: #495057;
+            border-bottom-color: #007bff;
+            background: white;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+
+        .tab-content {
+            padding: 30px;
+        }
+
+        .framework-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .framework-card {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+
+        .framework-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            border-color: #007bff;
+        }
+
+        .framework-card.selected {
+            border-color: #007bff;
+            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+        }
+
+        .framework-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .framework-description {
+            color: #6c757d;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .coverage-meter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .coverage-bar {
+            flex: 1;
+            height: 8px;
+            background: #e9ecef;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .coverage-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #20c997);
+            transition: width 0.5s ease;
+        }
+
+        .coverage-percentage {
+            font-weight: 600;
+            color: #28a745;
+        }
+
+        .requirements-section {
+            margin-top: 30px;
+        }
+
+        .requirement-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            border-left: 4px solid #007bff;
+            transition: all 0.3s ease;
+        }
+
+        .requirement-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .requirement-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .requirement-id {
+            font-family: 'Courier New', monospace;
+            background: #007bff;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .requirement-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .requirement-category {
+            display: inline-block;
+            background: #6f42c1;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        .requirement-description {
+            color: #495057;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .ciaf-capabilities {
+            margin-bottom: 15px;
+        }
+
+        .capabilities-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .capabilities-title::before {
+            content: "🔧";
+            margin-right: 5px;
+        }
+
+        .capability-tag {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            margin: 2px;
+            font-weight: 500;
+        }
+
+        .implementation-notes {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #17a2b8;
+            margin-bottom: 10px;
+        }
+
+        .verification-method {
+            background: #fff3cd;
+            padding: 12px;
+            border-radius: 6px;
+            border-left: 3px solid #ffc107;
+            margin-bottom: 10px;
+        }
+
+        .risk-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .risk-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .risk-medium {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .risk-low {
+            background: #28a745;
+            color: white;
+        }
+
+        .mandatory-badge {
+            background: #dc3545;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .optional-badge {
+            background: #6c757d;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .filter-select {
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 6px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .filter-select:focus,
+        .search-input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+
+        .documentation-links {
+            margin-top: 15px;
+            padding: 10px;
+            background: #e8f5e8;
+            border-radius: 6px;
+        }
+
+        .documentation-links h4 {
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .doc-link {
+            display: inline-block;
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 15px;
+            font-size: 0.9rem;
+        }
+
+        .doc-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .framework-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .search-filter {
+                flex-direction: column;
+            }
+
+            .search-input {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>🛡️ CIAF Regulatory Compliance Dashboard</h1>
+                <p>Comprehensive mapping of CIAF capabilities to regulatory requirements across multiple frameworks</p>
+            </div>
+
+            <div class="dashboard">
+                <nav class="nav-tabs">
+                    <button 
+                        v-for="tab in tabs" 
+                        :key="tab.id"
+                        @click="activeTab = tab.id"
+                        :class="['nav-tab', { active: activeTab === tab.id }]"
+                    >
+                        {{ tab.name }}
+                    </button>
+                </nav>
+
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div v-if="activeTab === 'overview'">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-number">{{ totalFrameworks }}</div>
+                                <div class="stat-label">Regulatory Frameworks</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ totalRequirements }}</div>
+                                <div class="stat-label">Total Requirements</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ averageCoverage }}%</div>
+                                <div class="stat-label">Average Coverage</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">{{ highRiskRequirements }}</div>
+                                <div class="stat-label">High Risk Requirements</div>
+                            </div>
+                        </div>
+
+                        <div class="chart-container">
+                            <canvas ref="coverageChart"></canvas>
+                        </div>
+
+                        <div class="framework-grid">
+                            <div 
+                                v-for="framework in frameworks" 
+                                :key="framework.id"
+                                @click="selectFramework(framework.id)"
+                                :class="['framework-card', { selected: selectedFramework === framework.id }]"
+                            >
+                                <div class="framework-title">{{ framework.name }}</div>
+                                <div class="framework-description">{{ framework.description }}</div>
+                                <div class="coverage-meter">
+                                    <div class="coverage-bar">
+                                        <div class="coverage-fill" :style="{ width: framework.coverage + '%' }"></div>
+                                    </div>
+                                    <span class="coverage-percentage">{{ framework.coverage }}%</span>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <span class="risk-badge" :class="'risk-' + framework.riskLevel">{{ framework.riskLevel }} Risk</span>
+                                    <span v-if="framework.mandatory" class="mandatory-badge">Mandatory</span>
+                                    <span v-else class="optional-badge">Optional</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Mapping Tab -->
+                    <div v-if="activeTab === 'detailed'">
+                        <div class="search-filter">
+                            <input 
+                                v-model="searchQuery" 
+                                class="search-input" 
+                                placeholder="Search requirements..." 
+                                type="text"
+                            >
+                            <select v-model="filterFramework" class="filter-select">
+                                <option value="">All Frameworks</option>
+                                <option v-for="framework in frameworks" :key="framework.id" :value="framework.id">
+                                    {{ framework.name }}
+                                </option>
+                            </select>
+                            <select v-model="filterRisk" class="filter-select">
+                                <option value="">All Risk Levels</option>
+                                <option value="high">High Risk</option>
+                                <option value="medium">Medium Risk</option>
+                                <option value="low">Low Risk</option>
+                            </select>
+                        </div>
+
+                        <div class="requirements-section">
+                            <div 
+                                v-for="requirement in filteredRequirements" 
+                                :key="requirement.id"
+                                class="requirement-card"
+                            >
+                                <div class="requirement-header">
+                                    <div>
+                                        <span class="requirement-id">{{ requirement.id }}</span>
+                                        <span class="requirement-category">{{ requirement.category }}</span>
+                                        <span v-if="requirement.mandatory" class="mandatory-badge">Mandatory</span>
+                                        <span v-else class="optional-badge">Optional</span>
+                                    </div>
+                                    <span class="risk-badge" :class="'risk-' + requirement.riskLevel">
+                                        {{ requirement.riskLevel }} Risk
+                                    </span>
+                                </div>
+                                
+                                <div class="requirement-title">{{ requirement.title }}</div>
+                                <div class="requirement-description">{{ requirement.description }}</div>
+                                
+                                <div class="ciaf-capabilities">
+                                    <div class="capabilities-title">CIAF Capabilities</div>
+                                    <div>
+                                        <span 
+                                            v-for="capability in requirement.ciafCapabilities" 
+                                            :key="capability"
+                                            class="capability-tag"
+                                        >
+                                            {{ capability }}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="implementation-notes">
+                                    <strong>💡 Implementation Notes:</strong><br>
+                                    {{ requirement.implementationNotes }}
+                                </div>
+
+                                <div class="verification-method">
+                                    <strong>✓ Verification Method:</strong><br>
+                                    {{ requirement.verificationMethod }}
+                                </div>
+
+                                <div class="documentation-links">
+                                    <h4>📋 Required Documentation:</h4>
+                                    <span 
+                                        v-for="doc in requirement.documentationRequired" 
+                                        :key="doc"
+                                        class="doc-link"
+                                    >
+                                        {{ doc }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CIAF Capabilities Tab -->
+                    <div v-if="activeTab === 'capabilities'">
+                        <div class="chart-container">
+                            <canvas ref="capabilitiesChart"></canvas>
+                        </div>
+                        
+                        <div class="framework-grid">
+                            <div 
+                                v-for="capability in ciafCapabilities" 
+                                :key="capability.name"
+                                class="framework-card"
+                            >
+                                <div class="framework-title">{{ capability.name }}</div>
+                                <div class="framework-description">{{ capability.description }}</div>
+                                <div style="margin-top: 15px;">
+                                    <strong>Addresses {{ capability.requirementCount }} Requirements</strong>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <span 
+                                        v-for="framework in capability.frameworks" 
+                                        :key="framework"
+                                        class="capability-tag"
+                                        style="font-size: 0.8rem;"
+                                    >
+                                        {{ framework }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Implementation Guide Tab -->
+                    <div v-if="activeTab === 'implementation'">
+                        <div class="requirement-card">
+                            <div class="requirement-title">🚀 Getting Started with CIAF Compliance</div>
+                            <div class="requirement-description">
+                                Follow these steps to implement CIAF for regulatory compliance in your organization:
+                            </div>
+                            
+                            <div class="implementation-notes">
+                                <strong>Step 1: Framework Assessment</strong><br>
+                                Identify applicable regulatory frameworks for your use case and industry.
+                                Use the framework selector above to review specific requirements.
+                            </div>
+
+                            <div class="verification-method">
+                                <strong>Step 2: CIAF Integration</strong><br>
+                                Install and configure CIAF with the appropriate modules for your compliance needs.
+                                Focus on audit trails, provenance tracking, and transparency features.
+                            </div>
+
+                            <div class="implementation-notes">
+                                <strong>Step 3: Documentation Setup</strong><br>
+                                Configure automated documentation generation for audit trails, 
+                                training records, and compliance reports using CIAF's reporting capabilities.
+                            </div>
+
+                            <div class="verification-method">
+                                <strong>Step 4: Validation and Testing</strong><br>
+                                Implement validation procedures to ensure compliance requirements are met.
+                                Use CIAF's verification tools to validate data integrity and audit trail completeness.
+                            </div>
+
+                            <div class="documentation-links">
+                                <h4>📚 Additional Resources:</h4>
+                                <a href="#" class="doc-link">CIAF Implementation Guide</a>
+                                <a href="#" class="doc-link">Compliance Checklist</a>
+                                <a href="#" class="doc-link">API Documentation</a>
+                                <a href="#" class="doc-link">Best Practices</a>
+                            </div>
+                        </div>
+
+                        <div class="requirement-card">
+                            <div class="requirement-title">🛡️ Security Considerations</div>
+                            <div class="requirement-description">
+                                CIAF provides enterprise-grade security features to support compliance requirements:
+                            </div>
+                            
+                            <div class="ciaf-capabilities">
+                                <div class="capabilities-title">Security Features</div>
+                                <div>
+                                    <span class="capability-tag">Cryptographic Integrity</span>
+                                    <span class="capability-tag">Secure Key Management</span>
+                                    <span class="capability-tag">Audit Trail Protection</span>
+                                    <span class="capability-tag">Data Encryption</span>
+                                    <span class="capability-tag">Access Controls</span>
+                                    <span class="capability-tag">Tamper Detection</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+        createApp({
+            setup() {
+                const activeTab = ref('overview');
+                const selectedFramework = ref('');
+                const searchQuery = ref('');
+                const filterFramework = ref('');
+                const filterRisk = ref('');
+                const coverageChart = ref(null);
+                const capabilitiesChart = ref(null);
+
+                const tabs = [
+                    { id: 'overview', name: 'Overview' },
+                    { id: 'detailed', name: 'Detailed Mapping' },
+                    { id: 'capabilities', name: 'CIAF Capabilities' },
+                    { id: 'implementation', name: 'Implementation Guide' }
+                ];
+
+                const frameworks = [
+                    {
+                        id: 'eu_ai_act',
+                        name: 'EU AI Act',
+                        description: 'European Union Artificial Intelligence Act - Comprehensive regulation for AI systems',
+                        coverage: 95,
+                        riskLevel: 'high',
+                        mandatory: true,
+                        requirementCount: 12
+                    },
+                    {
+                        id: 'nist_ai_rmf',
+                        name: 'NIST AI RMF',
+                        description: 'NIST AI Risk Management Framework - US federal guidance for AI risk management',
+                        coverage: 88,
+                        riskLevel: 'medium',
+                        mandatory: true,
+                        requirementCount: 8
+                    },
+                    {
+                        id: 'gdpr',
+                        name: 'GDPR',
+                        description: 'General Data Protection Regulation - Data protection and privacy regulation',
+                        coverage: 92,
+                        riskLevel: 'high',
+                        mandatory: true,
+                        requirementCount: 6
+                    },
+                    {
+                        id: 'hipaa',
+                        name: 'HIPAA',
+                        description: 'Health Insurance Portability and Accountability Act - Healthcare data protection',
+                        coverage: 85,
+                        riskLevel: 'high',
+                        mandatory: true,
+                        requirementCount: 5
+                    },
+                    {
+                        id: 'sox',
+                        name: 'SOX',
+                        description: 'Sarbanes-Oxley Act - Financial reporting and corporate governance',
+                        coverage: 78,
+                        riskLevel: 'medium',
+                        mandatory: true,
+                        requirementCount: 4
+                    },
+                    {
+                        id: 'iso_27001',
+                        name: 'ISO 27001',
+                        description: 'Information Security Management Systems standard',
+                        coverage: 82,
+                        riskLevel: 'medium',
+                        mandatory: false,
+                        requirementCount: 7
+                    }
+                ];
+
+                const requirements = [
+                    {
+                        id: 'EU_AI_ACT_001',
+                        framework: 'eu_ai_act',
+                        title: 'Risk Management System',
+                        description: 'Establish and maintain a comprehensive risk management system for high-risk AI systems throughout their lifecycle.',
+                        category: 'Risk Management',
+                        mandatory: true,
+                        ciafCapabilities: ['audit_trails', 'risk_assessment', 'provenance_tracking', 'compliance_validation'],
+                        implementationNotes: 'CIAF provides comprehensive audit trails and risk assessment capabilities through cryptographic provenance tracking and automated compliance validation.',
+                        verificationMethod: 'Document risk management processes, validate audit trail integrity, and demonstrate provenance capsule completeness.',
+                        documentationRequired: ['risk_assessment_report', 'audit_trail_documentation', 'provenance_records', 'compliance_validation_reports'],
+                        riskLevel: 'high'
+                    },
+                    {
+                        id: 'EU_AI_ACT_002',
+                        framework: 'eu_ai_act',
+                        title: 'Data Governance and Management',
+                        description: 'Implement appropriate data governance and management practices including data quality, relevance, and representativeness.',
+                        category: 'Data Governance',
+                        mandatory: true,
+                        ciafCapabilities: ['dataset_anchoring', 'provenance_capsules', 'cryptographic_integrity', 'data_validation'],
+                        implementationNotes: 'CIAF dataset anchoring ensures data integrity and complete provenance tracking with cryptographic verification of data quality and lineage.',
+                        verificationMethod: 'Verify dataset fingerprints, validate provenance capsule integrity, and demonstrate data quality metrics.',
+                        documentationRequired: ['dataset_documentation', 'data_quality_reports', 'provenance_validation', 'integrity_certificates'],
+                        riskLevel: 'high'
+                    },
+                    {
+                        id: 'EU_AI_ACT_003',
+                        framework: 'eu_ai_act',
+                        title: 'Transparency and Information Provision',
+                        description: 'Ensure transparency and provide adequate information to users about AI system capabilities and limitations.',
+                        category: 'Transparency',
+                        mandatory: true,
+                        ciafCapabilities: ['inference_receipts', 'training_snapshots', 'transparency_reports', 'explainability_features'],
+                        implementationNotes: 'CIAF inference receipts provide verifiable transparency with cryptographic proof of model decisions and training data provenance.',
+                        verificationMethod: 'Generate and validate transparency reports, verify inference receipt authenticity, and demonstrate explainability features.',
+                        documentationRequired: ['transparency_reports', 'user_documentation', 'inference_explanations', 'model_cards'],
+                        riskLevel: 'medium'
+                    },
+                    {
+                        id: 'NIST_AI_RMF_001',
+                        framework: 'nist_ai_rmf',
+                        title: 'AI Risk Management Strategy',
+                        description: 'Develop and implement a comprehensive AI risk management strategy aligned with organizational objectives.',
+                        category: 'Governance',
+                        mandatory: true,
+                        ciafCapabilities: ['risk_assessment', 'audit_trails', 'compliance_validation', 'governance_framework'],
+                        implementationNotes: 'CIAF supports comprehensive risk management through automated audit trails and integrated compliance validation systems.',
+                        verificationMethod: 'Document risk management strategy, validate implementation through audit trails, and demonstrate compliance validation processes.',
+                        documentationRequired: ['risk_management_strategy', 'governance_documentation', 'audit_reports', 'validation_results'],
+                        riskLevel: 'medium'
+                    },
+                    {
+                        id: 'GDPR_001',
+                        framework: 'gdpr',
+                        title: 'Data Protection by Design',
+                        description: 'Implement data protection by design and by default in all data processing activities.',
+                        category: 'Data Protection',
+                        mandatory: true,
+                        ciafCapabilities: ['cryptographic_integrity', 'access_controls', 'audit_trails', 'privacy_preservation'],
+                        implementationNotes: 'CIAF provides cryptographic data protection with built-in privacy preservation and comprehensive access control mechanisms.',
+                        verificationMethod: 'Demonstrate data protection measures, validate privacy preservation techniques, and audit access control implementations.',
+                        documentationRequired: ['privacy_impact_assessment', 'data_protection_documentation', 'access_control_policies', 'audit_logs'],
+                        riskLevel: 'high'
+                    },
+                    {
+                        id: 'HIPAA_001',
+                        framework: 'hipaa',
+                        title: 'Administrative Safeguards',
+                        description: 'Implement administrative safeguards for protected health information in AI systems.',
+                        category: 'Administrative Controls',
+                        mandatory: true,
+                        ciafCapabilities: ['access_controls', 'audit_trails', 'authentication_systems', 'role_based_access'],
+                        implementationNotes: 'CIAF provides comprehensive administrative safeguards through role-based access controls and detailed audit trail mechanisms.',
+                        verificationMethod: 'Validate access control implementations, review audit trail completeness, and demonstrate authentication system integrity.',
+                        documentationRequired: ['administrative_safeguards_policy', 'access_control_documentation', 'audit_trail_reports', 'authentication_logs'],
+                        riskLevel: 'high'
+                    }
+                ];
+
+                const ciafCapabilities = [
+                    {
+                        name: 'Cryptographic Integrity',
+                        description: 'End-to-end cryptographic verification of data and model integrity',
+                        requirementCount: 15,
+                        frameworks: ['EU AI Act', 'GDPR', 'HIPAA', 'ISO 27001']
+                    },
+                    {
+                        name: 'Audit Trails',
+                        description: 'Comprehensive, tamper-evident audit trails for all system operations',
+                        requirementCount: 18,
+                        frameworks: ['EU AI Act', 'NIST AI RMF', 'SOX', 'HIPAA']
+                    },
+                    {
+                        name: 'Provenance Tracking',
+                        description: 'Complete lineage tracking from data sources to model outputs',
+                        requirementCount: 12,
+                        frameworks: ['EU AI Act', 'NIST AI RMF', 'GDPR']
+                    },
+                    {
+                        name: 'Dataset Anchoring',
+                        description: 'Cryptographic fingerprinting and validation of training datasets',
+                        requirementCount: 10,
+                        frameworks: ['EU AI Act', 'GDPR', 'FDA AI/ML']
+                    },
+                    {
+                        name: 'Inference Receipts',
+                        description: 'Verifiable proof of model decisions and reasoning',
+                        requirementCount: 8,
+                        frameworks: ['EU AI Act', 'NIST AI RMF']
+                    },
+                    {
+                        name: 'Transparency Reports',
+                        description: 'Automated generation of compliance and transparency documentation',
+                        requirementCount: 14,
+                        frameworks: ['EU AI Act', 'GDPR', 'CCPA']
+                    }
+                ];
+
+                const totalFrameworks = computed(() => frameworks.length);
+                const totalRequirements = computed(() => requirements.length);
+                const averageCoverage = computed(() => {
+                    const total = frameworks.reduce((sum, f) => sum + f.coverage, 0);
+                    return Math.round(total / frameworks.length);
+                });
+                const highRiskRequirements = computed(() => {
+                    return requirements.filter(r => r.riskLevel === 'high').length;
+                });
+
+                const filteredRequirements = computed(() => {
+                    let filtered = requirements;
+                    
+                    if (searchQuery.value) {
+                        const query = searchQuery.value.toLowerCase();
+                        filtered = filtered.filter(r => 
+                            r.title.toLowerCase().includes(query) ||
+                            r.description.toLowerCase().includes(query) ||
+                            r.id.toLowerCase().includes(query) ||
+                            r.category.toLowerCase().includes(query)
+                        );
+                    }
+                    
+                    if (filterFramework.value) {
+                        filtered = filtered.filter(r => r.framework === filterFramework.value);
+                    }
+                    
+                    if (filterRisk.value) {
+                        filtered = filtered.filter(r => r.riskLevel === filterRisk.value);
+                    }
+                    
+                    return filtered;
+                });
+
+                const selectFramework = (frameworkId) => {
+                    selectedFramework.value = frameworkId;
+                    filterFramework.value = frameworkId;
+                    activeTab.value = 'detailed';
+                };
+
+                const initCoverageChart = () => {
+                    if (!coverageChart.value) return;
+                    
+                    const ctx = coverageChart.value.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: frameworks.map(f => f.name),
+                            datasets: [{
+                                label: 'Compliance Coverage (%)',
+                                data: frameworks.map(f => f.coverage),
+                                backgroundColor: frameworks.map(f => {
+                                    if (f.coverage >= 90) return '#28a745';
+                                    if (f.coverage >= 80) return '#ffc107';
+                                    return '#dc3545';
+                                }),
+                                borderColor: '#fff',
+                                borderWidth: 2,
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'CIAF Compliance Coverage by Framework',
+                                    font: { size: 16, weight: 'bold' }
+                                },
+                                legend: {
+                                    display: false
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    ticks: {
+                                        callback: function(value) {
+                                            return value + '%';
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    });
+                };
+
+                const initCapabilitiesChart = () => {
+                    if (!capabilitiesChart.value) return;
+                    
+                    const ctx = capabilitiesChart.value.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ciafCapabilities.map(c => c.name),
+                            datasets: [{
+                                data: ciafCapabilities.map(c => c.requirementCount),
+                                backgroundColor: [
+                                    '#007bff', '#28a745', '#ffc107', 
+                                    '#dc3545', '#6f42c1', '#17a2b8'
+                                ],
+                                borderWidth: 3,
+                                borderColor: '#fff'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: 'CIAF Capabilities - Requirements Coverage',
+                                    font: { size: 16, weight: 'bold' }
+                                },
+                                legend: {
+                                    position: 'bottom',
+                                    labels: {
+                                        padding: 20,
+                                        usePointStyle: true
+                                    }
+                                }
+                            }
+                        }
+                    });
+                };
+
+                onMounted(async () => {
+                    await nextTick();
+                    initCoverageChart();
+                    initCapabilitiesChart();
+                });
+
+                return {
+                    activeTab,
+                    selectedFramework,
+                    searchQuery,
+                    filterFramework,
+                    filterRisk,
+                    coverageChart,
+                    capabilitiesChart,
+                    tabs,
+                    frameworks,
+                    requirements,
+                    ciafCapabilities,
+                    totalFrameworks,
+                    totalRequirements,
+                    averageCoverage,
+                    highRiskRequirements,
+                    filteredRequirements,
+                    selectFramework
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

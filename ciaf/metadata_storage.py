@@ -26,21 +26,32 @@ class MetadataStorage:
     - Pickle files
     """
     
-    def __init__(self, storage_path: str = "ciaf_metadata", backend: str = "json"):
+    def __init__(self, storage_path: str = "ciaf_metadata", backend: str = "json", use_compression: bool = False):
         """
         Initialize metadata storage.
         
         Args:
             storage_path: Base path for metadata storage
             backend: Storage backend ('json', 'sqlite', 'pickle')
+            use_compression: Use compressed storage (creates CompressedMetadataStorage instance)
         """
-        self.storage_path = Path(storage_path)
-        self.backend = backend.lower()
-        self.storage_path.mkdir(parents=True, exist_ok=True)
-        
-        # Initialize backend-specific storage
-        if self.backend == "sqlite":
-            self._init_sqlite()
+        if use_compression:
+            # Import here to avoid circular imports
+            from .metadata_storage_compressed import CompressedMetadataStorage
+            self._compressed_storage = CompressedMetadataStorage(
+                storage_path=storage_path,
+                backend="compressed_json" if backend == "json" else backend
+            )
+            self._use_compressed = True
+        else:
+            self._use_compressed = False
+            self.storage_path = Path(storage_path)
+            self.backend = backend.lower()
+            self.storage_path.mkdir(parents=True, exist_ok=True)
+            
+            # Initialize backend-specific storage
+            if self.backend == "sqlite":
+                self._init_sqlite()
         
     def _init_sqlite(self):
         """Initialize SQLite database for metadata storage."""
@@ -93,7 +104,7 @@ class MetadataStorage:
         conn.commit()
         conn.close()
     
-    def save_metadata(self, 
+    def save_metadata(self,
                      model_name: str,
                      stage: str,
                      event_type: str,
@@ -114,6 +125,12 @@ class MetadataStorage:
         Returns:
             Unique identifier for the saved metadata
         """
+        # Use compressed storage if enabled
+        if self._use_compressed:
+            return self._compressed_storage.save_metadata(
+                model_name, stage, event_type, metadata, model_version, details
+            )
+        
         # Generate unique ID and timestamp
         metadata_id = str(uuid.uuid4())
         timestamp = datetime.now(timezone.utc).isoformat()
@@ -201,6 +218,10 @@ class MetadataStorage:
         Returns:
             Metadata record or None if not found
         """
+        # Use compressed storage if enabled
+        if self._use_compressed:
+            return self._compressed_storage.get_metadata(metadata_id)
+        
         if self.backend == "sqlite":
             return self._get_sqlite(metadata_id)
         else:
@@ -568,11 +589,15 @@ class MetadataStorage:
 # Global metadata storage instance
 _global_storage = None
 
-def get_metadata_storage(storage_path: str = "ciaf_metadata", backend: str = "json") -> MetadataStorage:
+def get_metadata_storage(
+    storage_path: str = "ciaf_metadata", 
+    backend: str = "json", 
+    use_compression: bool = False
+) -> MetadataStorage:
     """Get global metadata storage instance."""
     global _global_storage
     if _global_storage is None:
-        _global_storage = MetadataStorage(storage_path, backend)
+        _global_storage = MetadataStorage(storage_path, backend, use_compression)
     return _global_storage
 
 def save_pipeline_metadata(model_name: str, stage: str, event_type: str, metadata: Dict[str, Any], **kwargs) -> str:
