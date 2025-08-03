@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIAF Compliance Dashboard - Data Pipeline Tracing</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .pipeline-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .pipeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .pipeline-title {
+            font-size: 1.8rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .model-selector select {
+            padding: 8px 16px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            background: white;
+        }
+
+        .trace-btn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .trace-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .pipeline-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+
+        .pipeline-stage {
+            min-width: 280px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e9ecef;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .pipeline-stage.active {
+            border-color: #3498db;
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .pipeline-stage.completed {
+            border-color: #27ae60;
+            background: #d4edda;
+        }
+
+        .stage-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stage-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .stage-icon.input { background: #3498db; }
+        .stage-icon.preprocessing { background: #f39c12; }
+        .stage-icon.training { background: #9b59b6; }
+        .stage-icon.inference { background: #27ae60; }
+        .stage-icon.audit { background: #e74c3c; }
+
+        .stage-title {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .stage-status {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
+
+        .status-processing {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .stage-metadata {
+            margin-top: 15px;
+        }
+
+        .metadata-toggle {
+            background: none;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            font-weight: 500;
+            color: #495057;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .metadata-toggle:hover {
+            background: #e9ecef;
+        }
+
+        .metadata-content {
+            display: none;
+            margin-top: 10px;
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            border: 1px solid #dee2e6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .metadata-content.show {
+            display: block;
+        }
+
+        .json-viewer {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .json-key {
+            color: #d73a49;
+            font-weight: 600;
+        }
+
+        .json-string {
+            color: #032f62;
+        }
+
+        .json-number {
+            color: #005cc5;
+        }
+
+        .json-boolean {
+            color: #e36209;
+        }
+
+        .json-null {
+            color: #6f42c1;
+        }
+
+        .arrow-connector {
+            display: flex;
+            align-items: center;
+            color: #3498db;
+            font-size: 1.5rem;
+            margin: 0 10px;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .metric-title {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+
+        @media (max-width: 768px) {
+            .pipeline-flow {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .arrow-connector {
+                transform: rotate(90deg);
+                margin: 15px 0;
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-route"></i> CIAF Compliance Dashboard</h1>
+            <a href="/" class="back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Main Dashboard
+            </a>
+        </div>
+
+        <div class="alert" id="alert-box"></div>
+
+        <div class="pipeline-container">
+            <div class="pipeline-header">
+                <h2 class="pipeline-title">Data Pipeline Tracing</h2>
+                <div class="model-selector">
+                    <label for="model-select">Select Model:</label>
+                    <select id="model-select">
+                        <option value="">Choose a model...</option>
+                        <option value="job_classifier">Job Classifier</option>
+                        <option value="ct_scan">CT Scan Medical AI</option>
+                        <option value="credit_scoring">Credit Scoring</option>
+                    </select>
+                    <button class="trace-btn" onclick="startTrace()">
+                        <i class="fas fa-play"></i> Start Trace
+                    </button>
+                </div>
+            </div>
+
+            <div class="loading" id="trace-loading">
+                <div class="spinner"></div>
+                <span>Tracing data pipeline...</span>
+            </div>
+
+            <div class="pipeline-flow" id="pipeline-flow">
+                <!-- Pipeline stages will be populated here -->
+            </div>
+
+            <div class="metrics-grid" id="metrics-grid" style="display: none;">
+                <!-- Compliance metrics will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentModel = '';
+        let traceData = {};
+
+        function showAlert(message, type = 'info') {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.className = `alert ${type}`;
+            alertBox.innerHTML = message;
+            alertBox.style.display = 'block';
+            
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(show = true) {
+            document.getElementById('trace-loading').style.display = show ? 'flex' : 'none';
+        }
+
+        function formatJSON(obj, indent = 0) {
+            const indentStr = '  '.repeat(indent);
+            
+            if (obj === null) {
+                return '<span class="json-null">null</span>';
+            }
+            
+            if (typeof obj === 'string') {
+                return `<span class="json-string">"${obj}"</span>`;
+            }
+            
+            if (typeof obj === 'number') {
+                return `<span class="json-number">${obj}</span>`;
+            }
+            
+            if (typeof obj === 'boolean') {
+                return `<span class="json-boolean">${obj}</span>`;
+            }
+            
+            if (Array.isArray(obj)) {
+                if (obj.length === 0) return '[]';
+                
+                const items = obj.map(item => 
+                    indentStr + '  ' + formatJSON(item, indent + 1)
+                ).join(',\\n');
+                
+                return `[\\n${items}\\n${indentStr}]`;
+            }
+            
+            if (typeof obj === 'object') {
+                const keys = Object.keys(obj);
+                if (keys.length === 0) return '{}';
+                
+                const items = keys.map(key => 
+                    `${indentStr}  <span class="json-key">"${key}"</span>: ${formatJSON(obj[key], indent + 1)}`
+                ).join(',\\n');
+                
+                return `{\\n${items}\\n${indentStr}}`;
+            }
+            
+            return String(obj);
+        }
+
+        function createStage(stage, index) {
+            const stageDiv = document.createElement('div');
+            stageDiv.className = `pipeline-stage ${stage.status}`;
+            stageDiv.id = `stage-${index}`;
+            
+            stageDiv.innerHTML = `
+                <div class="stage-header">
+                    <div class="stage-icon ${stage.type}">
+                        <i class="${stage.icon}"></i>
+                    </div>
+                    <div>
+                        <div class="stage-title">${stage.title}</div>
+                        <span class="stage-status status-${stage.status}">${stage.status}</span>
+                    </div>
+                </div>
+                <div class="stage-metadata">
+                    <button class="metadata-toggle" onclick="toggleMetadata(${index})">
+                        <span>View Metadata</span>
+                        <i class="fas fa-chevron-down" id="toggle-icon-${index}"></i>
+                    </button>
+                    <div class="metadata-content" id="metadata-${index}">
+                        <div class="json-viewer">${formatJSON(stage.metadata)}</div>
+                    </div>
+                </div>
+            `;
+            
+            return stageDiv;
+        }
+
+        function toggleMetadata(index) {
+            const content = document.getElementById(`metadata-${index}`);
+            const icon = document.getElementById(`toggle-icon-${index}`);
+            
+            content.classList.toggle('show');
+            icon.className = content.classList.contains('show') ? 
+                'fas fa-chevron-up' : 'fas fa-chevron-down';
+        }
+
+        function createArrow() {
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow-connector';
+            arrow.innerHTML = '<i class="fas fa-arrow-right"></i>';
+            return arrow;
+        }
+
+        function renderPipeline(stages) {
+            const flowContainer = document.getElementById('pipeline-flow');
+            flowContainer.innerHTML = '';
+            
+            stages.forEach((stage, index) => {
+                flowContainer.appendChild(createStage(stage, index));
+                
+                if (index < stages.length - 1) {
+                    flowContainer.appendChild(createArrow());
+                }
+            });
+        }
+
+        function renderMetrics(metrics) {
+            const metricsGrid = document.getElementById('metrics-grid');
+            metricsGrid.innerHTML = '';
+            
+            Object.entries(metrics).forEach(([key, value]) => {
+                const metricCard = document.createElement('div');
+                metricCard.className = 'metric-card';
+                
+                const icon = getMetricIcon(key);
+                const formattedValue = typeof value === 'number' ? 
+                    (value < 1 ? (value * 100).toFixed(1) + '%' : value.toFixed(2)) : 
+                    value;
+                
+                metricCard.innerHTML = `
+                    <div class="metric-header">
+                        <i class="${icon}"></i>
+                        <span class="metric-title">${formatMetricName(key)}</span>
+                    </div>
+                    <div class="metric-value">${formattedValue}</div>
+                `;
+                
+                metricsGrid.appendChild(metricCard);
+            });
+            
+            metricsGrid.style.display = 'grid';
+        }
+
+        function getMetricIcon(key) {
+            const icons = {
+                'compliance_score': 'fas fa-shield-alt',
+                'bias_score': 'fas fa-balance-scale',
+                'fairness_score': 'fas fa-gavel',
+                'audit_events': 'fas fa-list-alt',
+                'data_lineage': 'fas fa-route',
+                'model_accuracy': 'fas fa-bullseye',
+                'prediction_confidence': 'fas fa-chart-line',
+                'uncertainty_score': 'fas fa-question-circle'
+            };
+            return icons[key] || 'fas fa-chart-bar';
+        }
+
+        function formatMetricName(key) {
+            return key.split('_').map(word => 
+                word.charAt(0).toUpperCase() + word.slice(1)
+            ).join(' ');
+        }
+
+        async function startTrace() {
+            const modelSelect = document.getElementById('model-select');
+            currentModel = modelSelect.value;
+            
+            if (!currentModel) {
+                showAlert('Please select a model to trace', 'error');
+                return;
+            }
+            
+            showLoading(true);
+            
+            try {
+                // Get real trace data from API
+                const response = await fetch(`/api/pipeline/trace/${currentModel}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const traceData = await response.json();
+                
+                if (traceData.error) {
+                    throw new Error(traceData.error);
+                }
+                
+                // Render the pipeline from API data
+                renderPipelineFromAPI(traceData);
+                renderMetrics(traceData.compliance_metrics || {});
+                
+                showAlert(`Successfully traced ${currentModel} pipeline`, 'success');
+            } catch (error) {
+                showAlert('Failed to trace pipeline: ' + error.message, 'error');
+                console.error('Trace error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function renderPipelineFromAPI(apiData) {
+            const stages = apiData.stages.map(stage => ({
+                type: stage.stage_id,
+                icon: getStageIcon(stage.stage_id),
+                title: stage.stage_name,
+                status: stage.status,
+                metadata: stage.metadata
+            }));
+            
+            renderPipeline(stages);
+            
+            // Animate stages
+            stages.forEach((stage, index) => {
+                setTimeout(() => {
+                    const stageElement = document.getElementById(`stage-${index}`);
+                    if (stageElement) {
+                        stageElement.classList.add('active');
+                        setTimeout(() => {
+                            stageElement.classList.remove('active');
+                            stageElement.classList.add('completed');
+                        }, 800);
+                    }
+                }, index * 300);
+            });
+        }
+        
+        function getStageIcon(stageId) {
+            const icons = {
+                'input': 'fas fa-upload',
+                'medical_input': 'fas fa-file-medical',
+                'financial_input': 'fas fa-file-invoice-dollar',
+                'preprocessing': 'fas fa-cogs',
+                'medical_preprocessing': 'fas fa-microscope',
+                'financial_preprocessing': 'fas fa-calculator',
+                'training': 'fas fa-brain',
+                'model_training': 'fas fa-brain',
+                'medical_training': 'fas fa-graduation-cap',
+                'credit_training': 'fas fa-chart-line',
+                'inference': 'fas fa-robot',
+                'medical_inference': 'fas fa-stethoscope',
+                'credit_inference': 'fas fa-credit-card',
+                'audit_trail': 'fas fa-clipboard-check',
+                'medical_audit': 'fas fa-shield-virus',
+                'regulatory_audit': 'fas fa-gavel'
+            };
+            return icons[stageId] || 'fas fa-circle';
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-select first available model if available
+            const urlParams = new URLSearchParams(window.location.search);
+            const preselectedModel = urlParams.get('model');
+            if (preselectedModel) {
+                document.getElementById('model-select').value = preselectedModel;
+                setTimeout(() => startTrace(), 500);
+            }
+        });
+    </script>
+</body>
+</html>

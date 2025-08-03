@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Classifier Testing - CIAF</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .result-value {
+            font-weight: 700;
+            color: #27ae60;
+        }
+
+        .result-value.negative {
+            color: #e74c3c;
+        }
+
+        .decision-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .decision-hire {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .decision-no-hire {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .compliance-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <h1><i class="fas fa-user-tie"></i> Job Classifier Testing</h1>
+                <a href="/" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+            <p style="color: #7f8c8d; font-size: 1.1rem;">Test hiring decisions with bias monitoring and compliance tracking</p>
+        </div>
+
+        <div class="alert" id="alert-box"></div>
+
+        <div class="content-grid">
+            <div class="card">
+                <h3><i class="fas fa-user"></i> Candidate Information</h3>
+                
+                <form id="prediction-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="education_score">Education Score (1-10)</label>
+                            <input type="number" id="education_score" min="1" max="10" step="0.1" value="7.5" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="experience_years">Experience (Years)</label>
+                            <input type="number" id="experience_years" min="0" max="50" step="0.5" value="5" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="skill_score">Skill Assessment (1-10)</label>
+                            <input type="number" id="skill_score" min="1" max="10" step="0.1" value="8.0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="age">Age</label>
+                            <input type="number" id="age" min="18" max="70" value="35" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" required>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                            <option value="2">Non-binary</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn" id="predict-btn">
+                        <i class="fas fa-brain"></i> Analyze Candidate
+                    </button>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <span>Analyzing candidate...</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><i class="fas fa-chart-bar"></i> Prediction Results</h3>
+                
+                <div class="results-section" id="results">
+                    <div class="result-item">
+                        <span class="result-label">Hiring Decision:</span>
+                        <span class="decision-badge" id="decision"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Hire Probability:</span>
+                        <span class="result-value" id="probability"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Prediction Uncertainty:</span>
+                        <span class="result-value" id="uncertainty"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Model Type:</span>
+                        <span class="result-value" id="model-type"></span>
+                    </div>
+                </div>
+
+                <div class="compliance-metrics" id="compliance-metrics" style="display: none;">
+                    <div class="metric-card">
+                        <div class="metric-value" id="compliance-score">-</div>
+                        <div class="metric-label">Compliance Score</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="bias-score">-</div>
+                        <div class="metric-label">Bias Score</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="fairness-score">-</div>
+                        <div class="metric-label">Fairness Score</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 25px;">
+            <h3><i class="fas fa-info-circle"></i> CIAF Compliance Information</h3>
+            <p style="margin-bottom: 15px;">This Job Classifier model incorporates the following compliance measures:</p>
+            <ul style="list-style-type: none; padding: 0;">
+                <li style="padding: 8px 0; border-bottom: 1px solid #ecf0f1;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 10px;"></i>
+                    <strong>Bias Detection:</strong> Continuous monitoring for demographic bias in hiring decisions
+                </li>
+                <li style="padding: 8px 0; border-bottom: 1px solid #ecf0f1;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 10px;"></i>
+                    <strong>Fair Hiring Compliance:</strong> EEOC guidelines and equal opportunity requirements
+                </li>
+                <li style="padding: 8px 0; border-bottom: 1px solid #ecf0f1;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 10px;"></i>
+                    <strong>Audit Trail:</strong> Complete logging of all predictions and model decisions
+                </li>
+                <li style="padding: 8px 0; border-bottom: 1px solid #ecf0f1;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 10px;"></i>
+                    <strong>Uncertainty Quantification:</strong> Confidence measures for each prediction
+                </li>
+                <li style="padding: 8px 0;">
+                    <i class="fas fa-check-circle" style="color: #27ae60; margin-right: 10px;"></i>
+                    <strong>GDPR Compliance:</strong> Data protection and privacy safeguards
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                education_score: parseFloat(document.getElementById('education_score').value),
+                experience_years: parseFloat(document.getElementById('experience_years').value),
+                skill_score: parseFloat(document.getElementById('skill_score').value),
+                age: parseInt(document.getElementById('age').value),
+                gender_encoded: parseInt(document.getElementById('gender').value)
+            };
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/api/predict/job_classifier', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayResults(result);
+                } else {
+                    showAlert(result.error || 'Prediction failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        function showAlert(message, type = 'info') {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.className = `alert ${type}`;
+            alertBox.innerHTML = message;
+            alertBox.style.display = 'block';
+            
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+            document.getElementById('predict-btn').disabled = show;
+        }
+
+        function displayResults(result) {
+            // Update decision
+            const decisionElement = document.getElementById('decision');
+            decisionElement.textContent = result.decision;
+            decisionElement.className = `decision-badge ${result.decision === 'HIRE' ? 'decision-hire' : 'decision-no-hire'}`;
+            
+            // Update other results
+            document.getElementById('probability').textContent = (result.hire_probability * 100).toFixed(1) + '%';
+            document.getElementById('uncertainty').textContent = (result.uncertainty * 100).toFixed(1) + '%';
+            document.getElementById('model-type').textContent = result.model_type;
+            
+            // Update compliance metrics
+            if (result.compliance_score !== undefined) {
+                document.getElementById('compliance-score').textContent = (result.compliance_score * 100).toFixed(1) + '%';
+            }
+            if (result.bias_score !== undefined) {
+                document.getElementById('bias-score').textContent = (result.bias_score * 100).toFixed(1) + '%';
+            }
+            
+            // Show results
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('compliance-metrics').style.display = 'grid';
+            
+            showAlert('Prediction completed successfully', 'success');
+        }
+
+        // Generate random candidate for demo
+        function generateRandomCandidate() {
+            document.getElementById('education_score').value = (Math.random() * 4 + 6).toFixed(1);
+            document.getElementById('experience_years').value = Math.floor(Math.random() * 15);
+            document.getElementById('skill_score').value = (Math.random() * 4 + 6).toFixed(1);
+            document.getElementById('age').value = Math.floor(Math.random() * 40 + 25);
+            document.getElementById('gender').value = Math.floor(Math.random() * 3);
+        }
+
+        // Add random candidate button
+        document.addEventListener('DOMContentLoaded', function() {
+            const randomBtn = document.createElement('button');
+            randomBtn.type = 'button';
+            randomBtn.className = 'btn';
+            randomBtn.style.background = 'linear-gradient(135deg, #3498db, #2980b9)';
+            randomBtn.style.marginTop = '10px';
+            randomBtn.innerHTML = '<i class="fas fa-random"></i> Generate Random Candidate';
+            randomBtn.onclick = generateRandomCandidate;
+            
+            document.getElementById('prediction-form').appendChild(randomBtn);
+        });
+    </script>
+</body>
+</html>

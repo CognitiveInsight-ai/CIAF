@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIAF Healthcare AI Dashboard - CTScan v1.2</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border-left: 6px solid #e74c3c;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header .model-badge {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.green { background: #27ae60; }
+        .status-dot.yellow { background: #f39c12; }
+        .status-dot.red { background: #e74c3c; }
+        .status-dot.blue { background: #3498db; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .medical-card {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .hipaa-card {
+            border-left: 4px solid #2980b9;
+        }
+
+        .fda-card {
+            border-left: 4px solid #8e44ad;
+        }
+
+        .performance-card {
+            border-left: 4px solid #27ae60;
+        }
+
+        .compliance-score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #27ae60;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .compliance-score.warning { color: #f39c12; }
+        .compliance-score.danger { color: #e74c3c; }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+        }
+
+        .progress-fill.danger {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-weight: 500;
+            color: #5a6c7d;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .framework-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .framework-icon {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .hipaa { background: #2980b9; }
+        .fda-ai-ml { background: #8e44ad; }
+        .gdpr { background: #e67e22; }
+        .iso-13485 { background: #34495e; }
+        .iec-62304 { background: #16a085; }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+
+        .alert.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #f39c12;
+        }
+
+        .alert.danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .visualization-container {
+            grid-column: 1 / -1;
+            height: 450px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        #threejs-container {
+            width: 100%;
+            height: 400px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .risk-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .risk-low { background: #d4edda; color: #155724; }
+        .risk-medium { background: #fff3cd; color: #856404; }
+        .risk-high { background: #f8d7da; color: #721c24; }
+        .risk-critical { background: #f5c6cb; color: #491217; }
+
+        .diagnostic-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .diagnostic-metric {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .diagnostic-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .diagnostic-label {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .patient-data {
+            background: #e8f4f8;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+
+        .patient-data h5 {
+            color: #0c5460;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .action-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .phi-protected {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .fda-status {
+            background: linear-gradient(135deg, #8e44ad, #9b59b6);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .quality-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 6px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1>
+                <i class="fas fa-x-ray"></i> 
+                Healthcare AI Compliance Dashboard
+                <span class="model-badge">CTScan v1.2</span>
+            </h1>
+            <p>HIPAA, FDA AI/ML, and Medical Device Compliance Monitoring - Powered by CIAF Framework</p>
+            
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot green"></div>
+                    <span><strong>Medical Device Status:</strong> FDA Cleared</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot blue"></div>
+                    <span><strong>HIPAA Compliance:</strong> 96.8% Validated</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot green"></div>
+                    <span><strong>Patient Safety:</strong> Monitored 24/7</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot yellow"></div>
+                    <span><strong>Quality Alerts:</strong> 2 Under Review</span>
+                </div>
+                <div class="timestamp">
+                    Last Updated: <span id="timestamp"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid">
+            <!-- Medical Device Compliance -->
+            <div class="card medical-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-stethoscope"></i>
+                        Medical Device Compliance
+                    </h3>
+                    <span class="fda-status">FDA Cleared</span>
+                </div>
+                <div class="compliance-score">97.3%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 97.3%"></div>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">FDA 510(k) Status</span>
+                    <span class="metric-value">✓ Cleared</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">ISO 13485 Compliance</span>
+                    <span class="metric-value">98.2%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">IEC 62304 Software</span>
+                    <span class="metric-value">Class B</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Last Audit</span>
+                    <span class="metric-value">15 days ago</span>
+                </div>
+            </div>
+
+            <!-- HIPAA Privacy & Security -->
+            <div class="card hipaa-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-shield-alt"></i>
+                        HIPAA Privacy & Security
+                    </h3>
+                    <span class="phi-protected">PHI Protected</span>
+                </div>
+                
+                <div class="framework-status">
+                    <div class="framework-icon hipaa">HIPAA</div>
+                    <div>
+                        <strong>Administrative Safeguards</strong>
+                        <div class="metric-value">96.8% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill" style="width: 96.8%"></div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon hipaa">TECH</div>
+                    <div>
+                        <strong>Technical Safeguards</strong>
+                        <div class="metric-value">98.5% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill" style="width: 98.5%"></div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon hipaa">PHYS</div>
+                    <div>
+                        <strong>Physical Safeguards</strong>
+                        <div class="metric-value">94.2% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill warning" style="width: 94.2%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Performance Metrics -->
+            <div class="card performance-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        Clinical Performance
+                    </h3>
+                </div>
+                
+                <div class="diagnostic-metrics">
+                    <div class="diagnostic-metric">
+                        <div class="diagnostic-value">94.7%</div>
+                        <div class="diagnostic-label">Sensitivity</div>
+                    </div>
+                    <div class="diagnostic-metric">
+                        <div class="diagnostic-value">92.1%</div>
+                        <div class="diagnostic-label">Specificity</div>
+                    </div>
+                    <div class="diagnostic-metric">
+                        <div class="diagnostic-value">88.9%</div>
+                        <div class="diagnostic-label">PPV</div>
+                    </div>
+                    <div class="diagnostic-metric">
+                        <div class="diagnostic-value">96.3%</div>
+                        <div class="diagnostic-label">NPV</div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- FDA AI/ML Compliance -->
+            <div class="card fda-card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-certificate"></i>
+                        FDA AI/ML Requirements
+                    </h3>
+                </div>
+                
+                <div class="framework-status">
+                    <div class="framework-icon fda-ai-ml">SaMD</div>
+                    <div>
+                        <strong>Software as Medical Device</strong>
+                        <div class="metric-value">Class II Cleared</div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon fda-ai-ml">CDS</div>
+                    <div>
+                        <strong>Clinical Decision Support</strong>
+                        <div class="metric-value">Level 3 Validated</div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon fda-ai-ml">QSR</div>
+                    <div>
+                        <strong>Quality System Regulation</strong>
+                        <div class="metric-value">Compliant</div>
+                    </div>
+                </div>
+
+                <div class="metric-row">
+                    <span class="metric-label">Algorithm Transparency</span>
+                    <span class="metric-value">Documented</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Bias Testing</span>
+                    <span class="metric-value">Monthly</span>
+                </div>
+            </div>
+
+            <!-- Patient Safety Monitoring -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-heartbeat"></i>
+                        Patient Safety Monitoring
+                    </h3>
+                    <span class="metric-value">24/7 Active</span>
+                </div>
+                
+                <div class="alert info">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Real-Time Monitoring Active</strong><br>
+                        Continuous monitoring of diagnostic accuracy and safety metrics
+                    </div>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Adverse Events</span>
+                    <span class="metric-value">0 (Last 30 days)</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">False Positive Rate</span>
+                    <span class="metric-value">7.9%</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">False Negative Rate</span>
+                    <span class="metric-value">5.3%</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Diagnostic Confidence</span>
+                    <span class="metric-value">93.4%</span>
+                </div>
+            </div>
+
+            <!-- Quality Assurance -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-award"></i>
+                        Quality Assurance
+                    </h3>
+                </div>
+                
+                <div class="quality-metric">
+                    <span class="metric-label">Image Quality Score</span>
+                    <span class="metric-value">97.2%</span>
+                </div>
+                
+                <div class="quality-metric">
+                    <span class="metric-label">Processing Time</span>
+                    <span class="metric-value">2.3s avg</span>
+                </div>
+                
+                <div class="quality-metric">
+                    <span class="metric-label">Calibration Accuracy</span>
+                    <span class="metric-value">99.8%</span>
+                </div>
+                
+                <div class="quality-metric">
+                    <span class="metric-label">System Uptime</span>
+                    <span class="metric-value">99.97%</span>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <a href="#" class="btn btn-info">
+                        <i class="fas fa-chart-bar"></i>
+                        View QA Report
+                    </a>
+                </div>
+            </div>
+
+            <!-- Active Alerts & Issues -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Active Alerts
+                    </h3>
+                    <span class="metric-value">2 Under Review</span>
+                </div>
+                
+                <div class="alert warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Calibration Drift Detected</strong><br>
+                        CT scanner #3 showing 0.8% calibration drift - scheduled for maintenance
+                    </div>
+                </div>
+                
+                <div class="alert info">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Software Update Available</strong><br>
+                        CTScan v1.3 with enhanced lung nodule detection available
+                    </div>
+                </div>
+                
+                <div class="alert success">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <strong>HIPAA Audit Complete</strong><br>
+                        Annual HIPAA compliance audit passed with 98.5% score
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regulatory Compliance Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-gavel"></i>
+                        Regulatory Compliance
+                    </h3>
+                </div>
+                
+                <div class="framework-status">
+                    <div class="framework-icon fda-ai-ml">FDA</div>
+                    <div>
+                        <strong>FDA AI/ML Guidance</strong>
+                        <div class="metric-value">97.8% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill" style="width: 97.8%"></div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon iso-13485">ISO</div>
+                    <div>
+                        <strong>ISO 13485</strong>
+                        <div class="metric-value">98.2% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill" style="width: 98.2%"></div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon iec-62304">IEC</div>
+                    <div>
+                        <strong>IEC 62304</strong>
+                        <div class="metric-value">96.1% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill" style="width: 96.1%"></div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon gdpr">GDPR</div>
+                    <div>
+                        <strong>GDPR (EU Patients)</strong>
+                        <div class="metric-value">94.7% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill warning" style="width: 94.7%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uncertainty & Reliability -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Uncertainty Quantification
+                    </h3>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Prediction Confidence</span>
+                    <span class="metric-value">93.4% ± 2.1%</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Bayesian Uncertainty</span>
+                    <span class="metric-value">0.0247</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Epistemic Uncertainty</span>
+                    <span class="metric-value">0.0156</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Aleatoric Uncertainty</span>
+                    <span class="metric-value">0.0091</span>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="uncertaintyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Patient Data Protection -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-user-shield"></i>
+                        Patient Data Protection
+                    </h3>
+                </div>
+                
+                <div class="patient-data">
+                    <h5><i class="fas fa-lock"></i> Protected Health Information (PHI)</h5>
+                    <div class="metric-row">
+                        <span class="metric-label">Encryption Status</span>
+                        <span class="metric-value">AES-256 Active</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Access Controls</span>
+                        <span class="metric-value">Role-Based (RBAC)</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Audit Logging</span>
+                        <span class="metric-value">100% Coverage</span>
+                    </div>
+                </div>
+
+                <div class="metric-row">
+                    <span class="metric-label">Data Anonymization</span>
+                    <span class="metric-value">De-identified</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Consent Management</span>
+                    <span class="metric-value">Tracked & Verified</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Breach Incidents</span>
+                    <span class="metric-value">0 (Last 12 months)</span>
+                </div>
+            </div>
+
+            <!-- Clinical Validation -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-microscope"></i>
+                        Clinical Validation
+                    </h3>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Validation Dataset</span>
+                    <span class="metric-value">15,847 cases</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Multi-site Validation</span>
+                    <span class="metric-value">12 hospitals</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Radiologist Agreement</span>
+                    <span class="metric-value">91.3% (κ=0.86)</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Clinical Evidence</span>
+                    <span class="metric-value">Level II-3</span>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="validationChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Medical Visualization -->
+        <div class="visualization-container">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-cube"></i>
+                    Medical AI Provenance Visualization
+                </h3>
+                <div>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-expand"></i>
+                        Full Screen
+                    </a>
+                    <a href="#" class="btn btn-info">
+                        <i class="fas fa-download"></i>
+                        Export DICOM
+                    </a>
+                    <a href="#" class="btn btn-danger">
+                        <i class="fas fa-file-medical"></i>
+                        Clinical Report
+                    </a>
+                </div>
+            </div>
+            <div id="threejs-container"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid" style="margin-top: 25px;">
+            <div class="card">
+                <h4 style="margin-bottom: 20px;">Clinical Actions</h4>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <a href="#" class="btn btn-danger">
+                        <i class="fas fa-file-medical-alt"></i>
+                        Generate Clinical Report
+                    </a>
+                    <a href="#" class="btn btn-info">
+                        <i class="fas fa-shield-alt"></i>
+                        HIPAA Audit
+                    </a>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i>
+                        Performance Analysis
+                    </a>
+                    <a href="#" class="btn btn-success">
+                        <i class="fas fa-certificate"></i>
+                        FDA Validation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = now.toLocaleString();
+        }
+        updateTimestamp();
+        setInterval(updateTimestamp, 60000);
+
+        // Clinical Performance Chart
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(performanceCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Sensitivity', 'Specificity', 'PPV', 'NPV', 'Accuracy'],
+                datasets: [{
+                    label: 'CTScan v1.2',
+                    data: [94.7, 92.1, 88.9, 96.3, 93.4],
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.2)',
+                    pointBackgroundColor: '#e74c3c',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#e74c3c'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                elements: {
+                    line: {
+                        borderWidth: 3
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // Uncertainty Chart
+        const uncertaintyCtx = document.getElementById('uncertaintyChart').getContext('2d');
+        new Chart(uncertaintyCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Prediction Confidence (%)',
+                    data: [92.1, 93.8, 93.4, 94.2, 93.9, 93.4],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 90,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // Clinical Validation Chart
+        const validationCtx = document.getElementById('validationChart').getContext('2d');
+        new Chart(validationCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Validated Cases', 'Pending Review', 'Failed Validation'],
+                datasets: [{
+                    data: [14892, 847, 108],
+                    backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Medical 3D Visualization
+        function initMedical3DVisualization() {
+            const container = document.getElementById('threejs-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setClearColor(0xf0f8ff);
+            container.appendChild(renderer.domElement);
+
+            // Create medical device nodes
+            const nodeGeometry = new THREE.SphereGeometry(0.6, 32, 32);
+            
+            // Patient Data (Blue - HIPAA Protected)
+            const patientMaterial = new THREE.MeshBasicMaterial({ color: 0x2980b9 });
+            const patientNode = new THREE.Mesh(nodeGeometry, patientMaterial);
+            patientNode.position.set(-4, 0, 0);
+            scene.add(patientNode);
+            
+            // CT Scanner (Red - Medical Device)
+            const scannerMaterial = new THREE.MeshBasicMaterial({ color: 0xe74c3c });
+            const scannerNode = new THREE.Mesh(nodeGeometry, scannerMaterial);
+            scannerNode.position.set(-1, 2, 0);
+            scene.add(scannerNode);
+            
+            // AI Model (Green - Diagnostic AI)
+            const aiMaterial = new THREE.MeshBasicMaterial({ color: 0x27ae60 });
+            const aiNode = new THREE.Mesh(nodeGeometry, aiMaterial);
+            aiNode.position.set(2, 0, 0);
+            scene.add(aiNode);
+            
+            // Clinical Decision (Purple - FDA Validated)
+            const clinicalMaterial = new THREE.MeshBasicMaterial({ color: 0x8e44ad });
+            const clinicalNode = new THREE.Mesh(nodeGeometry, clinicalMaterial);
+            clinicalNode.position.set(4, -1, 0);
+            scene.add(clinicalNode);
+            
+            // Audit Trail (Orange - Compliance)
+            const auditMaterial = new THREE.MeshBasicMaterial({ color: 0xe67e22 });
+            const auditNode = new THREE.Mesh(nodeGeometry, auditMaterial);
+            auditNode.position.set(0, -3, 0);
+            scene.add(auditNode);
+
+            // Create medical workflow connections
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x7f8c8d, linewidth: 2 });
+            
+            // Patient to Scanner
+            const points1 = [patientNode.position, scannerNode.position];
+            const geometry1 = new THREE.BufferGeometry().setFromPoints(points1);
+            const line1 = new THREE.Line(geometry1, lineMaterial);
+            scene.add(line1);
+            
+            // Scanner to AI
+            const points2 = [scannerNode.position, aiNode.position];
+            const geometry2 = new THREE.BufferGeometry().setFromPoints(points2);
+            const line2 = new THREE.Line(geometry2, lineMaterial);
+            scene.add(line2);
+            
+            // AI to Clinical Decision
+            const points3 = [aiNode.position, clinicalNode.position];
+            const geometry3 = new THREE.BufferGeometry().setFromPoints(points3);
+            const line3 = new THREE.Line(geometry3, lineMaterial);
+            scene.add(line3);
+            
+            // All to Audit
+            const points4 = [scannerNode.position, auditNode.position];
+            const geometry4 = new THREE.BufferGeometry().setFromPoints(points4);
+            const line4 = new THREE.Line(geometry4, lineMaterial);
+            scene.add(line4);
+            
+            const points5 = [aiNode.position, auditNode.position];
+            const geometry5 = new THREE.BufferGeometry().setFromPoints(points5);
+            const line5 = new THREE.Line(geometry5, lineMaterial);
+            scene.add(line5);
+
+            camera.position.z = 10;
+
+            // Medical animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Gentle rotation for medical visualization
+                scene.rotation.y += 0.003;
+                
+                // Pulse nodes with medical rhythm
+                const time = Date.now() * 0.0015;
+                patientNode.scale.setScalar(1 + 0.05 * Math.sin(time));
+                scannerNode.scale.setScalar(1 + 0.08 * Math.sin(time + 1));
+                aiNode.scale.setScalar(1 + 0.06 * Math.sin(time + 2));
+                clinicalNode.scale.setScalar(1 + 0.07 * Math.sin(time + 3));
+                auditNode.scale.setScalar(1 + 0.04 * Math.sin(time + 4));
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Handle resize
+            function onWindowResize() {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // Initialize medical visualization
+        document.addEventListener('DOMContentLoaded', function() {
+            initMedical3DVisualization();
+        });
+
+        // Simulate real-time medical updates
+        function simulateMedicalUpdates() {
+            setInterval(() => {
+                // Update diagnostic metrics with realistic medical variations
+                const sensitivityElement = document.querySelector('.diagnostic-metrics .diagnostic-value');
+                if (sensitivityElement) {
+                    const currentValue = parseFloat(sensitivityElement.textContent);
+                    const variation = (Math.random() - 0.5) * 0.5; // ±0.25% variation
+                    const newValue = Math.max(90, Math.min(100, currentValue + variation));
+                    sensitivityElement.textContent = newValue.toFixed(1) + '%';
+                }
+            }, 15000); // Update every 15 seconds
+        }
+
+        simulateMedicalUpdates();
+    </script>
+</body>
+</html>

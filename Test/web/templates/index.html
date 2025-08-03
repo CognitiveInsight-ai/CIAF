@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIAF Model Testing Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+
+        .status-overview {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f8f9fa;
+            border-radius: 20px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status-dot.success { background: #27ae60; }
+        .status-dot.warning { background: #f39c12; }
+        .status-dot.error { background: #e74c3c; }
+
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .model-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .model-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .model-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .model-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-loaded { background: #d4edda; color: #155724; }
+        .status-trained { background: #cce5ff; color: #004085; }
+        .status-error { background: #f8d7da; color: #721c24; }
+        .status-not-loaded { background: #f8f9fa; color: #6c757d; }
+
+        .model-info {
+            margin: 20px 0;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #5a6c7d;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .model-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .quick-actions {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .quick-actions h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+
+        .error-details {
+            font-size: 0.9rem;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .models-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.2rem;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .model-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-cogs"></i> CIAF Model Testing Dashboard</h1>
+            <p>Test and Monitor AI Models with Comprehensive Compliance Framework</p>
+            
+            <div class="status-overview">
+                <div class="status-item">
+                    <div class="status-dot success"></div>
+                    <span>CIAF Framework: Active</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot warning"></div>
+                    <span>Models: <span id="loaded-count">0</span>/3 Loaded</span>
+                </div>
+                <div class="status-item">
+                    <div class="status-dot success"></div>
+                    <span>Compliance Monitoring: Enabled</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="alert" id="alert-box"></div>
+
+        <div class="quick-actions">
+            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="loadAllModels()">
+                    <i class="fas fa-download"></i> Load All Models
+                </button>
+                <button class="btn btn-success" onclick="trainAllModels()">
+                    <i class="fas fa-play"></i> Train All Models
+                </button>
+                <button class="btn btn-info" onclick="window.location.href='/compliance'">
+                    <i class="fas fa-chart-bar"></i> Compliance Dashboard
+                </button>
+                <button class="btn btn-warning" onclick="refreshStatus()">
+                    <i class="fas fa-refresh"></i> Refresh Status
+                </button>
+            </div>
+            <div class="loading" id="global-loading">
+                <div class="spinner"></div>
+                <span>Processing...</span>
+            </div>
+        </div>
+
+        <div class="models-grid">
+            <!-- Job Classifier Model -->
+            <div class="model-card" id="job-classifier-card">
+                <div class="model-header">
+                    <h3 class="model-title">
+                        <i class="fas fa-user-tie"></i>
+                        Job Classifier
+                    </h3>
+                    <span class="model-status status-not-loaded" id="job-classifier-status">Not Loaded</span>
+                </div>
+                
+                <div class="model-info">
+                    <div class="info-item">
+                        <span class="info-label">Model Type:</span>
+                        <span class="info-value">RandomForest Hiring Decision</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Compliance Frameworks:</span>
+                        <span class="info-value">EEOC, Fair Hiring, GDPR</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Bias Score:</span>
+                        <span class="info-value" id="job-classifier-bias">-</span>
+                    </div>
+                </div>
+                
+                <div class="model-actions">
+                    <button class="btn btn-primary" onclick="loadModel('job_classifier')">
+                        <i class="fas fa-download"></i> Load
+                    </button>
+                    <button class="btn btn-success" onclick="trainModel('job_classifier')" disabled>
+                        <i class="fas fa-play"></i> Train
+                    </button>
+                    <button class="btn btn-info" onclick="window.location.href='/test/job_classifier'" disabled>
+                        <i class="fas fa-test-tube"></i> Test
+                    </button>
+                </div>
+                <div class="loading" id="job-classifier-loading">
+                    <div class="spinner"></div>
+                    <span>Loading...</span>
+                </div>
+            </div>
+
+            <!-- CT Scan Model -->
+            <div class="model-card" id="ct-scan-card">
+                <div class="model-header">
+                    <h3 class="model-title">
+                        <i class="fas fa-x-ray"></i>
+                        CT Scan Classifier
+                    </h3>
+                    <span class="model-status status-not-loaded" id="ct-scan-status">Not Loaded</span>
+                </div>
+                
+                <div class="model-info">
+                    <div class="info-item">
+                        <span class="info-label">Model Type:</span>
+                        <span class="info-value">Medical Diagnostic AI</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Compliance Frameworks:</span>
+                        <span class="info-value">FDA AI/ML, HIPAA, ISO 13485</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">FDA Status:</span>
+                        <span class="info-value" id="ct-scan-fda">-</span>
+                    </div>
+                </div>
+                
+                <div class="model-actions">
+                    <button class="btn btn-primary" onclick="loadModel('ct_scan')">
+                        <i class="fas fa-download"></i> Load
+                    </button>
+                    <button class="btn btn-success" onclick="trainModel('ct_scan')" disabled>
+                        <i class="fas fa-play"></i> Train
+                    </button>
+                    <button class="btn btn-info" onclick="window.location.href='/test/ct_scan'" disabled>
+                        <i class="fas fa-test-tube"></i> Test
+                    </button>
+                </div>
+                <div class="loading" id="ct-scan-loading">
+                    <div class="spinner"></div>
+                    <span>Loading...</span>
+                </div>
+            </div>
+
+            <!-- Credit Scoring Model -->
+            <div class="model-card" id="credit-scoring-card">
+                <div class="model-header">
+                    <h3 class="model-title">
+                        <i class="fas fa-credit-card"></i>
+                        Credit Scoring
+                    </h3>
+                    <span class="model-status status-not-loaded" id="credit-scoring-status">Not Loaded</span>
+                </div>
+                
+                <div class="model-info">
+                    <div class="info-item">
+                        <span class="info-label">Model Type:</span>
+                        <span class="info-value">Financial Risk Assessment</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Compliance Frameworks:</span>
+                        <span class="info-value">Fair Lending, FCRA, GDPR</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Fair Lending Score:</span>
+                        <span class="info-value" id="credit-scoring-fair-lending">-</span>
+                    </div>
+                </div>
+                
+                <div class="model-actions">
+                    <button class="btn btn-primary" onclick="loadModel('credit_scoring')">
+                        <i class="fas fa-download"></i> Load
+                    </button>
+                    <button class="btn btn-success" onclick="trainModel('credit_scoring')" disabled>
+                        <i class="fas fa-play"></i> Train
+                    </button>
+                    <button class="btn btn-info" onclick="window.location.href='/test_credit_scoring'" disabled>
+                        <i class="fas fa-test-tube"></i> Test
+                    </button>
+                </div>
+                <div class="loading" id="credit-scoring-loading">
+                    <div class="spinner"></div>
+                    <span>Loading...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let modelStatus = {};
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshStatus();
+        });
+
+        function showAlert(message, type = 'info') {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.className = `alert ${type}`;
+            alertBox.innerHTML = message;
+            alertBox.style.display = 'block';
+            
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(modelName, show = true) {
+            const loading = document.getElementById(`${modelName}-loading`);
+            if (loading) {
+                loading.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        function showGlobalLoading(show = true) {
+            const loading = document.getElementById('global-loading');
+            loading.style.display = show ? 'flex' : 'none';
+        }
+
+        function updateModelStatus(modelName, status) {
+            const statusElement = document.getElementById(`${modelName}-status`);
+            const actions = document.querySelectorAll(`#${modelName}-card .btn`);
+            
+            if (status.error) {
+                statusElement.textContent = 'Error';
+                statusElement.className = 'model-status status-error';
+                showAlert(`Error with ${modelName}: ${status.error}`, 'error');
+            } else if (status.trained) {
+                statusElement.textContent = 'Trained';
+                statusElement.className = 'model-status status-trained';
+                actions.forEach(btn => btn.disabled = false);
+            } else if (status.loaded) {
+                statusElement.textContent = 'Loaded';
+                statusElement.className = 'model-status status-loaded';
+                actions[1].disabled = false; // Enable train button
+                actions[2].disabled = true;  // Keep test disabled until trained
+            } else {
+                statusElement.textContent = 'Not Loaded';
+                statusElement.className = 'model-status status-not-loaded';
+                actions[1].disabled = true;
+                actions[2].disabled = true;
+            }
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch('/api/models/status');
+                modelStatus = await response.json();
+                
+                let loadedCount = 0;
+                for (const [modelName, status] of Object.entries(modelStatus)) {
+                    updateModelStatus(modelName.replace('_', '-'), status);
+                    if (status.loaded) loadedCount++;
+                }
+                
+                document.getElementById('loaded-count').textContent = loadedCount;
+                
+                // Update model-specific info
+                if (modelStatus.job_classifier && modelStatus.job_classifier.trained) {
+                    const info = await getModelInfo('job_classifier');
+                    if (info && info.bias_score) {
+                        document.getElementById('job-classifier-bias').textContent = (info.bias_score * 100).toFixed(1) + '%';
+                    }
+                }
+                
+                if (modelStatus.ct_scan && modelStatus.ct_scan.trained) {
+                    const info = await getModelInfo('ct_scan');
+                    if (info && info.fda_clearance !== undefined) {
+                        document.getElementById('ct-scan-fda').textContent = info.fda_clearance ? 'FDA Cleared' : 'Pending';
+                    }
+                }
+                
+                if (modelStatus.credit_scoring && modelStatus.credit_scoring.trained) {
+                    const info = await getModelInfo('credit_scoring');
+                    if (info && info.fair_lending_compliance) {
+                        document.getElementById('credit-scoring-fair-lending').textContent = (info.fair_lending_compliance * 100).toFixed(1) + '%';
+                    }
+                }
+                
+            } catch (error) {
+                showAlert('Failed to refresh status: ' + error.message, 'error');
+            }
+        }
+
+        async function getModelInfo(modelName) {
+            try {
+                const response = await fetch(`/api/models/info/${modelName}`);
+                if (response.ok) {
+                    return await response.json();
+                }
+                return null;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        async function loadModel(modelName) {
+            showLoading(modelName.replace('_', '-'));
+            
+            try {
+                const response = await fetch(`/api/models/load/${modelName}`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(result.message, 'success');
+                    await refreshStatus();
+                } else {
+                    showAlert(result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to load model: ' + error.message, 'error');
+            } finally {
+                showLoading(modelName.replace('_', '-'), false);
+            }
+        }
+
+        async function trainModel(modelName) {
+            showLoading(modelName.replace('_', '-'));
+            
+            try {
+                const response = await fetch(`/api/models/train/${modelName}`);
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showAlert(result.message, 'success');
+                    await refreshStatus();
+                } else {
+                    showAlert(result.error, 'error');
+                }
+            } catch (error) {
+                showAlert('Failed to train model: ' + error.message, 'error');
+            } finally {
+                showLoading(modelName.replace('_', '-'), false);
+            }
+        }
+
+        async function loadAllModels() {
+            showGlobalLoading();
+            
+            const models = ['job_classifier', 'ct_scan', 'credit_scoring'];
+            let successCount = 0;
+            
+            for (const model of models) {
+                try {
+                    const response = await fetch(`/api/models/load/${model}`);
+                    if (response.ok) {
+                        successCount++;
+                    }
+                } catch (error) {
+                    console.error(`Failed to load ${model}:`, error);
+                }
+            }
+            
+            showAlert(`Loaded ${successCount}/${models.length} models successfully`, 
+                     successCount === models.length ? 'success' : 'info');
+            
+            await refreshStatus();
+            showGlobalLoading(false);
+        }
+
+        async function trainAllModels() {
+            showGlobalLoading();
+            
+            const models = ['job_classifier', 'ct_scan', 'credit_scoring'];
+            let successCount = 0;
+            
+            for (const model of models) {
+                if (modelStatus[model] && modelStatus[model].loaded) {
+                    try {
+                        const response = await fetch(`/api/models/train/${model}`);
+                        if (response.ok) {
+                            successCount++;
+                        }
+                    } catch (error) {
+                        console.error(`Failed to train ${model}:`, error);
+                    }
+                }
+            }
+            
+            showAlert(`Trained ${successCount} models successfully`, 
+                     successCount > 0 ? 'success' : 'info');
+            
+            await refreshStatus();
+            showGlobalLoading(false);
+        }
+    </script>
+</body>
+</html>

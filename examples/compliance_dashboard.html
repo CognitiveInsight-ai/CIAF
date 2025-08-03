@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CIAF AI Governance Compliance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #242d57 0%, #667cdb  100%);
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.green { background: #27ae60; }
+        .status-dot.yellow { background: #f39c12; }
+        .status-dot.red { background: #e74c3c; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .compliance-score {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #27ae60;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .compliance-score.warning { color: #f39c12; }
+        .compliance-score.danger { color: #e74c3c; }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: #ecf0f1;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 15px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            border-radius: 6px;
+            transition: width 1s ease;
+        }
+
+        .progress-fill.warning {
+            background: linear-gradient(90deg, #f39c12, #e67e22);
+        }
+
+        .progress-fill.danger {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+
+        .metric-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f1f3f4;
+        }
+
+        .metric-row:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-weight: 500;
+            color: #5a6c7d;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .framework-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .framework-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .eu-ai-act { background: #3498db; }
+        .nist-ai-rmf { background: #9b59b6; }
+        .gdpr { background: #e67e22; }
+        .iso-27001 { background: #34495e; }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+
+        .alert.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #f39c12;
+        }
+
+        .alert.danger {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .visualization-container {
+            grid-column: 1 / -1;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        #threejs-container {
+            width: 100%;
+            height: 350px;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .timestamp {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .risk-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .risk-low { background: #d4edda; color: #155724; }
+        .risk-medium { background: #fff3cd; color: #856404; }
+        .risk-high { background: #f8d7da; color: #721c24; }
+        .risk-critical { background: #f5c6cb; color: #491217; }
+
+        .action-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .action-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="header">
+            <h1><i class="fas fa-shield-alt"></i> CIAF AI Governance Dashboard</h1>
+            <p>Comprehensive 360° AI Compliance Monitoring - Powered by Cognitive Insight AI Framework</p>
+            
+            <div class="status-bar">
+                <div class="status-indicator">
+                    <div class="status-dot green"></div>
+                    <span><strong>System Status:</strong> Operational</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot green"></div>
+                    <span><strong>Compliance Status:</strong> 94.2% Overall</span>
+                </div>
+                <div class="status-indicator">
+                    <div class="status-dot yellow"></div>
+                    <span><strong>Active Alerts:</strong> 3 Medium Priority</span>
+                </div>
+                <div class="timestamp">
+                    Last Updated: <span id="timestamp"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="grid">
+            <!-- Overall Compliance Score -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Overall Compliance Score
+                    </h3>
+                    <i class="fas fa-info-circle" title="Aggregated score across all regulatory frameworks"></i>
+                </div>
+                <div class="compliance-score">94.2%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 94.2%"></div>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Target Score</span>
+                    <span class="metric-value">≥95%</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Models Monitored</span>
+                    <span class="metric-value">47</span>
+                </div>
+                <div class="metric-row">
+                    <span class="metric-label">Last Assessment</span>
+                    <span class="metric-value">2 hours ago</span>
+                </div>
+            </div>
+
+            <!-- Regulatory Framework Status -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-gavel"></i>
+                        Regulatory Framework Status
+                    </h3>
+                </div>
+                
+                <div class="framework-status">
+                    <div class="framework-icon eu-ai-act">EU</div>
+                    <div>
+                        <strong>EU AI Act</strong>
+                        <div class="metric-value">96.8% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill" style="width: 96.8%"></div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon nist-ai-rmf">NIST</div>
+                    <div>
+                        <strong>NIST AI RMF</strong>
+                        <div class="metric-value">98.1% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill" style="width: 98.1%"></div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon gdpr">GDPR</div>
+                    <div>
+                        <strong>GDPR</strong>
+                        <div class="metric-value">89.3% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill warning" style="width: 89.3%"></div>
+                    </div>
+                </div>
+
+                <div class="framework-status">
+                    <div class="framework-icon iso-27001">ISO</div>
+                    <div>
+                        <strong>ISO 27001</strong>
+                        <div class="metric-value">92.7% Compliant</div>
+                    </div>
+                    <div class="progress-bar" style="width: 100px;">
+                        <div class="progress-fill" style="width: 92.7%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Assessment -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Risk Assessment
+                    </h3>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Overall Risk Level</span>
+                    <span class="risk-indicator risk-medium">Medium</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Bias Risk</span>
+                    <span class="risk-indicator risk-low">Low</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Privacy Risk</span>
+                    <span class="risk-indicator risk-medium">Medium</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Security Risk</span>
+                    <span class="risk-indicator risk-low">Low</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Performance Risk</span>
+                    <span class="risk-indicator risk-low">Low</span>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="riskChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Active Alerts -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-bell"></i>
+                        Active Alerts
+                    </h3>
+                    <span class="metric-value">3 Active</span>
+                </div>
+                
+                <div class="alert warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>GDPR Compliance Gap</strong><br>
+                        Data retention policy needs review for JobClassifier_v2.1
+                    </div>
+                </div>
+                
+                <div class="alert warning">
+                    <i class="fas fa-chart-line"></i>
+                    <div>
+                        <strong>Performance Drift Detected</strong><br>
+                        Model accuracy dropped below 92% threshold
+                    </div>
+                </div>
+                
+                <div class="alert success">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <strong>Bias Correction Complete</strong><br>
+                        Fairness score improved to 94.2% after retraining
+                    </div>
+                </div>
+            </div>
+
+            <!-- Uncertainty Quantification -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Uncertainty Quantification
+                    </h3>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Prediction Variance</span>
+                    <span class="metric-value">0.003176</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Confidence Interval (95%)</span>
+                    <span class="metric-value">[0.665, 0.879]</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Entropy Score</span>
+                    <span class="metric-value">0.342</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Method</span>
+                    <span class="metric-value">Monte Carlo Dropout</span>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="uncertaintyChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Corrective Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-tools"></i>
+                        Corrective Actions
+                    </h3>
+                    <span class="metric-value">5 In Progress</span>
+                </div>
+                
+                <div class="action-item">
+                    <div>
+                        <strong>Bias Mitigation - JobClassifier</strong><br>
+                        <small>Estimated Cost: $32,500</small>
+                    </div>
+                    <div class="action-status">
+                        <span class="metric-value">91% Complete</span>
+                        <div class="progress-bar" style="width: 60px;">
+                            <div class="progress-fill" style="width: 91%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-item">
+                    <div>
+                        <strong>GDPR Data Mapping Update</strong><br>
+                        <small>Priority: High</small>
+                    </div>
+                    <div class="action-status">
+                        <span class="metric-value">67% Complete</span>
+                        <div class="progress-bar" style="width: 60px;">
+                            <div class="progress-fill warning" style="width: 67%"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-item">
+                    <div>
+                        <strong>Security Audit - Phase 2</strong><br>
+                        <small>External Auditor Review</small>
+                    </div>
+                    <div class="action-status">
+                        <span class="metric-value">34% Complete</span>
+                        <div class="progress-bar" style="width: 60px;">
+                            <div class="progress-fill" style="width: 34%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-tachometer-alt"></i>
+                        Performance Metrics
+                    </h3>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Audit Trail Generation</span>
+                    <span class="metric-value">10,847 events/sec</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Compliance Validation</span>
+                    <span class="metric-value">0.8s response</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Document Generation</span>
+                    <span class="metric-value">23s average</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">System Uptime</span>
+                    <span class="metric-value">99.97%</span>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="performanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Stakeholder Impact -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-users"></i>
+                        Stakeholder Impact
+                    </h3>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Job Seekers Impacted</span>
+                    <span class="metric-value">75,000</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Protected Groups</span>
+                    <span class="metric-value">25,000</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Public Consultation</span>
+                    <span class="metric-value">247 participants</span>
+                </div>
+                
+                <div class="metric-row">
+                    <span class="metric-label">Risk Level</span>
+                    <span class="risk-indicator risk-medium">High → Managed</span>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-eye"></i>
+                        View Impact Assessment
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Visualization -->
+        <div class="visualization-container">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-cube"></i>
+                    3D Provenance Visualization
+                </h3>
+                <div>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-expand"></i>
+                        Full Screen
+                    </a>
+                    <a href="#" class="btn btn-success">
+                        <i class="fas fa-download"></i>
+                        Export
+                    </a>
+                </div>
+            </div>
+            <div id="threejs-container"></div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="grid" style="margin-top: 25px;">
+            <div class="card">
+                <h4 style="margin-bottom: 20px;">Quick Actions</h4>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-file-alt"></i>
+                        Generate Report
+                    </a>
+                    <a href="#" class="btn btn-success">
+                        <i class="fas fa-check-double"></i>
+                        Run Validation
+                    </a>
+                    <a href="#" class="btn btn-primary">
+                        <i class="fas fa-chart-line"></i>
+                        Risk Assessment
+                    </a>
+                    <a href="#" class="btn btn-success">
+                        <i class="fas fa-eye"></i>
+                        Audit Trail
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Update timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            document.getElementById('timestamp').textContent = now.toLocaleString();
+        }
+        updateTimestamp();
+        setInterval(updateTimestamp, 60000); // Update every minute
+
+        // Risk Assessment Chart
+        const riskCtx = document.getElementById('riskChart').getContext('2d');
+        new Chart(riskCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Low Risk', 'Medium Risk', 'High Risk'],
+                datasets: [{
+                    data: [65, 30, 5],
+                    backgroundColor: ['#27ae60', '#f39c12', '#e74c3c'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // Uncertainty Chart
+        const uncertaintyCtx = document.getElementById('uncertaintyChart').getContext('2d');
+        new Chart(uncertaintyCtx, {
+            type: 'line',
+            data: {
+                labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                datasets: [{
+                    label: 'Prediction Variance',
+                    data: [0.004, 0.0035, 0.003176, 0.0029],
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Performance Chart
+        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+        new Chart(performanceCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Audit Generation', 'Validation', 'Documentation', 'Visualization'],
+                datasets: [{
+                    label: 'Performance (relative)',
+                    data: [98, 95, 92, 88],
+                    backgroundColor: ['#27ae60', '#2ecc71', '#3498db', '#9b59b6'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+
+        // Simple 3D Visualization using Three.js
+        function init3DVisualization() {
+            const container = document.getElementById('threejs-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setClearColor(0xf8f9fa);
+            container.appendChild(renderer.domElement);
+
+            // Create nodes representing different components
+            const nodeGeometry = new THREE.SphereGeometry(0.5, 32, 32);
+            
+            // Dataset Anchor (Blue)
+            const datasetMaterial = new THREE.MeshBasicMaterial({ color: 0x3498db });
+            const datasetNode = new THREE.Mesh(nodeGeometry, datasetMaterial);
+            datasetNode.position.set(-3, 0, 0);
+            scene.add(datasetNode);
+            
+            // Model Node (Green)
+            const modelMaterial = new THREE.MeshBasicMaterial({ color: 0x27ae60 });
+            const modelNode = new THREE.Mesh(nodeGeometry, modelMaterial);
+            modelNode.position.set(0, 2, 0);
+            scene.add(modelNode);
+            
+            // Compliance Node (Purple)
+            const complianceMaterial = new THREE.MeshBasicMaterial({ color: 0x9b59b6 });
+            const complianceNode = new THREE.Mesh(nodeGeometry, complianceMaterial);
+            complianceNode.position.set(3, 0, 0);
+            scene.add(complianceNode);
+            
+            // Inference Node (Orange)
+            const inferenceMaterial = new THREE.MeshBasicMaterial({ color: 0xe67e22 });
+            const inferenceNode = new THREE.Mesh(nodeGeometry, inferenceMaterial);
+            inferenceNode.position.set(0, -2, 0);
+            scene.add(inferenceNode);
+
+            // Create connections (edges)
+            const lineMaterial = new THREE.LineBasicMaterial({ color: 0x7f8c8d });
+            
+            // Dataset to Model
+            const points1 = [datasetNode.position, modelNode.position];
+            const geometry1 = new THREE.BufferGeometry().setFromPoints(points1);
+            const line1 = new THREE.Line(geometry1, lineMaterial);
+            scene.add(line1);
+            
+            // Model to Compliance
+            const points2 = [modelNode.position, complianceNode.position];
+            const geometry2 = new THREE.BufferGeometry().setFromPoints(points2);
+            const line2 = new THREE.Line(geometry2, lineMaterial);
+            scene.add(line2);
+            
+            // Model to Inference
+            const points3 = [modelNode.position, inferenceNode.position];
+            const geometry3 = new THREE.BufferGeometry().setFromPoints(points3);
+            const line3 = new THREE.Line(geometry3, lineMaterial);
+            scene.add(line3);
+
+            camera.position.z = 8;
+
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                // Rotate the entire scene
+                scene.rotation.y += 0.005;
+                
+                // Pulse nodes
+                const time = Date.now() * 0.002;
+                datasetNode.scale.setScalar(1 + 0.1 * Math.sin(time));
+                modelNode.scale.setScalar(1 + 0.1 * Math.sin(time + 1));
+                complianceNode.scale.setScalar(1 + 0.1 * Math.sin(time + 2));
+                inferenceNode.scale.setScalar(1 + 0.1 * Math.sin(time + 3));
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            // Handle window resize
+            function onWindowResize() {
+                camera.aspect = container.clientWidth / container.clientHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(container.clientWidth, container.clientHeight);
+            }
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        // Initialize 3D visualization when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            init3DVisualization();
+        });
+
+        // Simulate real-time updates
+        function simulateRealTimeUpdates() {
+            // Randomly update some metrics
+            setInterval(() => {
+                const elements = document.querySelectorAll('.progress-fill');
+                elements.forEach(el => {
+                    const currentWidth = parseFloat(el.style.width);
+                    const change = (Math.random() - 0.5) * 2; // Random change between -1 and 1
+                    const newWidth = Math.max(70, Math.min(100, currentWidth + change));
+                    el.style.width = newWidth + '%';
+                });
+            }, 10000); // Update every 10 seconds
+        }
+
+        simulateRealTimeUpdates();
+    </script>
+</body>
+</html>

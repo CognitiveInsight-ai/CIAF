@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Scoring AI Testing - CIAF</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border-left: 6px solid #f39c12;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .compliance-notice {
+            background: #e8f4f8;
+            border: 1px solid #bee5eb;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .financial-card {
+            border-left: 4px solid #f39c12;
+        }
+
+        .card h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #f39c12;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .form-section h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .result-item:last-child {
+            border-bottom: none;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .result-value {
+            font-weight: 700;
+        }
+
+        .decision-approved { color: #27ae60; }
+        .decision-denied { color: #e74c3c; }
+
+        .decision-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+
+        .decision-badge.approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .decision-badge.denied {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .adverse-action {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+
+        .adverse-action h5 {
+            color: #856404;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .financial-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            text-align: center;
+            padding: 15px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .fair-lending-badge {
+            background: linear-gradient(135deg, #27ae60, #2ecc71);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .gdpr-badge {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: none;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #27ae60;
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .loading {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #f39c12;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                <h1><i class="fas fa-credit-card"></i> Credit Scoring AI Testing</h1>
+                <a href="/" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+            <p style="color: #7f8c8d; font-size: 1.1rem;">Fair lending compliant AI for credit risk assessment and decision making</p>
+            
+            <div style="display: flex; gap: 15px; margin-top: 15px; align-items: center;">
+                <span class="fair-lending-badge">Fair Lending Compliant</span>
+                <span class="gdpr-badge">GDPR Protected</span>
+            </div>
+        </div>
+
+        <div class="compliance-notice">
+            <i class="fas fa-gavel" style="color: #0c5460;"></i>
+            <span><strong>Fair Lending Notice:</strong> This model complies with Fair Credit Reporting Act (FCRA) and Equal Credit Opportunity Act (ECOA). Adverse action notices are automatically generated.</span>
+        </div>
+
+        <div class="alert" id="alert-box"></div>
+
+        <div class="content-grid">
+            <div class="card financial-card">
+                <h3><i class="fas fa-user-check"></i> Credit Application Input</h3>
+                
+                <form id="prediction-form">
+                    <div class="form-section">
+                        <h4><i class="fas fa-dollar-sign"></i> Financial Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="annual_income">Annual Income ($)</label>
+                                <input type="number" id="annual_income" min="10000" max="1000000" step="1000" value="65000" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="existing_debt">Existing Debt ($)</label>
+                                <input type="number" id="existing_debt" min="0" max="500000" step="500" value="15000" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="credit_history_length">Credit History (Years)</label>
+                                <input type="number" id="credit_history_length" min="0" max="50" step="0.5" value="8" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="num_credit_accounts">Number of Credit Accounts</label>
+                                <input type="number" id="num_credit_accounts" min="0" max="20" step="1" value="3" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="payment_history_score">Payment History Score (0-100)</label>
+                                <input type="number" id="payment_history_score" min="0" max="100" step="1" value="85" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="credit_utilization">Credit Utilization (0-1)</label>
+                                <input type="number" id="credit_utilization" min="0" max="1" step="0.01" value="0.3" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h4><i class="fas fa-user"></i> Applicant Information</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="age">Age</label>
+                                <input type="number" id="age" min="18" max="80" value="35" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="employment_type_encoded">Employment Type</label>
+                                <select id="employment_type_encoded" required>
+                                    <option value="0">Full-time</option>
+                                    <option value="1">Part-time</option>
+                                    <option value="2">Self-employed</option>
+                                    <option value="3">Unemployed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="state_encoded">State/Region</label>
+                            <select id="state_encoded" required>
+                                <option value="0">California</option>
+                                <option value="1">Texas</option>
+                                <option value="2">New York</option>
+                                <option value="3">Florida</option>
+                                <option value="4">Illinois</option>
+                                <option value="5">Pennsylvania</option>
+                                <option value="6">Ohio</option>
+                                <option value="7">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn" id="predict-btn">
+                        <i class="fas fa-calculator"></i> Analyze Credit Application
+                    </button>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <span>Analyzing credit application...</span>
+                </div>
+            </div>
+
+            <div class="card financial-card">
+                <h3><i class="fas fa-chart-line"></i> Credit Decision Results</h3>
+                
+                <div class="results-section" id="results">
+                    <div class="result-item">
+                        <span class="result-label">Credit Decision:</span>
+                        <span class="decision-badge" id="decision"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Approval Probability:</span>
+                        <span class="result-value" id="approval-prob"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Decision Confidence:</span>
+                        <span class="result-value" id="confidence"></span>
+                    </div>
+                    <div class="result-item">
+                        <span class="result-label">Credit Score Range:</span>
+                        <span class="result-value" id="credit-score"></span>
+                    </div>
+                </div>
+
+                <div class="adverse-action" id="adverse-action" style="display: none;">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Adverse Action Notice</h5>
+                    <p style="margin-bottom: 10px;"><strong>Required by Fair Credit Reporting Act (FCRA)</strong></p>
+                    <div id="adverse-reasons"></div>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: #856404;">
+                        You have the right to a free copy of your credit report. Contact information for credit bureaus has been provided separately.
+                    </p>
+                </div>
+
+                <div class="financial-metrics" id="financial-metrics" style="display: none;">
+                    <div class="metric-card">
+                        <div class="metric-value" id="fair-lending-score">-</div>
+                        <div class="metric-label">Fair Lending</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="gdpr-score">-</div>
+                        <div class="metric-label">GDPR Compliance</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="bias-score">-</div>
+                        <div class="metric-label">Bias Score</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="debt-ratio">-</div>
+                        <div class="metric-label">Debt-to-Income</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card financial-card" style="margin-top: 25px;">
+            <h3><i class="fas fa-balance-scale"></i> Fair Lending & Compliance Framework</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div>
+                    <h4 style="color: #f39c12; margin-bottom: 10px;">Fair Lending Laws</h4>
+                    <ul style="list-style-type: none; padding: 0;">
+                        <li style="padding: 5px 0;"><i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>Equal Credit Opportunity Act (ECOA)</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>Fair Credit Reporting Act (FCRA)</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>80% Rule Disparate Impact Testing</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-check-circle" style="color: #27ae60; margin-right: 8px;"></i>Automatic Adverse Action Notices</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: #3498db; margin-bottom: 10px;">Data Protection</h4>
+                    <ul style="list-style-type: none; padding: 0;">
+                        <li style="padding: 5px 0;"><i class="fas fa-shield-alt" style="color: #3498db; margin-right: 8px;"></i>GDPR Compliance (EU Customers)</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-shield-alt" style="color: #3498db; margin-right: 8px;"></i>CCPA Compliance (CA Residents)</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-shield-alt" style="color: #3498db; margin-right: 8px;"></i>Data Minimization Principles</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-shield-alt" style="color: #3498db; margin-right: 8px;"></i>Consent Management</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: #8e44ad; margin-bottom: 10px;">Model Explainability</h4>
+                    <ul style="list-style-type: none; padding: 0;">
+                        <li style="padding: 5px 0;"><i class="fas fa-eye" style="color: #8e44ad; margin-right: 8px;"></i>Feature Importance Tracking</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-eye" style="color: #8e44ad; margin-right: 8px;"></i>Decision Reasoning Provided</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-eye" style="color: #8e44ad; margin-right: 8px;"></i>Bias Monitoring & Mitigation</li>
+                        <li style="padding: 5px 0;"><i class="fas fa-eye" style="color: #8e44ad; margin-right: 8px;"></i>Regular Model Auditing</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('prediction-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const annualIncome = parseFloat(document.getElementById('annual_income').value);
+            const existingDebt = parseFloat(document.getElementById('existing_debt').value);
+            
+            const formData = {
+                annual_income: annualIncome,
+                credit_history_length: parseFloat(document.getElementById('credit_history_length').value),
+                existing_debt: existingDebt,
+                debt_to_income_ratio: existingDebt / annualIncome,
+                num_credit_accounts: parseInt(document.getElementById('num_credit_accounts').value),
+                payment_history_score: parseFloat(document.getElementById('payment_history_score').value),
+                credit_utilization: parseFloat(document.getElementById('credit_utilization').value),
+                age: parseInt(document.getElementById('age').value),
+                employment_type_encoded: parseInt(document.getElementById('employment_type_encoded').value),
+                state_encoded: parseInt(document.getElementById('state_encoded').value)
+            };
+            
+            showLoading(true);
+            
+            try {
+                const response = await fetch('/api/predict/credit_scoring', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    displayResults(result, formData.debt_to_income_ratio);
+                } else {
+                    showAlert(result.error || 'Credit analysis failed', 'error');
+                }
+            } catch (error) {
+                showAlert('Network error: ' + error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+
+        function showAlert(message, type = 'info') {
+            const alertBox = document.getElementById('alert-box');
+            alertBox.className = `alert ${type}`;
+            alertBox.innerHTML = message;
+            alertBox.style.display = 'block';
+            
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+            document.getElementById('predict-btn').disabled = show;
+        }
+
+        function displayResults(result, debtRatio) {
+            // Update decision
+            const decisionElement = document.getElementById('decision');
+            decisionElement.textContent = result.decision;
+            decisionElement.className = `decision-badge ${result.decision.toLowerCase()}`;
+            
+            // Update other results
+            const approvalProb = (result.approval_probability * 100).toFixed(1);
+            document.getElementById('approval-prob').textContent = approvalProb + '%';
+            document.getElementById('approval-prob').className = `result-value ${result.decision === 'APPROVED' ? 'decision-approved' : 'decision-denied'}`;
+            
+            document.getElementById('confidence').textContent = (result.confidence * 100).toFixed(1) + '%';
+            
+            // Calculate estimated credit score
+            const creditScore = Math.round(300 + (result.approval_probability * 550));
+            document.getElementById('credit-score').textContent = `${creditScore} - ${creditScore + 50}`;
+            
+            // Update compliance metrics
+            if (result.fair_lending_compliance !== undefined) {
+                document.getElementById('fair-lending-score').textContent = (result.fair_lending_compliance * 100).toFixed(1) + '%';
+            }
+            if (result.gdpr_compliance !== undefined) {
+                document.getElementById('gdpr-score').textContent = (result.gdpr_compliance * 100).toFixed(1) + '%';
+            }
+            if (result.bias_score !== undefined) {
+                document.getElementById('bias-score').textContent = (result.bias_score * 100).toFixed(1) + '%';
+            }
+            document.getElementById('debt-ratio').textContent = (debtRatio * 100).toFixed(1) + '%';
+            
+            // Show/hide adverse action notice
+            const adverseActionDiv = document.getElementById('adverse-action');
+            if (result.adverse_action && result.adverse_action.decision === 'DENIED') {
+                const reasonsList = document.getElementById('adverse-reasons');
+                reasonsList.innerHTML = '<strong>Primary reasons for denial:</strong><ul>' +
+                    result.adverse_action.reasons.map(reason => `<li style="margin: 5px 0;">${reason}</li>`).join('') +
+                    '</ul>';
+                adverseActionDiv.style.display = 'block';
+            } else {
+                adverseActionDiv.style.display = 'none';
+            }
+            
+            // Show results
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('financial-metrics').style.display = 'grid';
+            
+            const message = result.decision === 'APPROVED' ? 
+                'Credit application approved successfully' : 
+                'Credit application analyzed - adverse action notice generated';
+            showAlert(message, result.decision === 'APPROVED' ? 'success' : 'error');
+        }
+
+        // Generate random credit application for demo
+        function generateRandomApplication() {
+            // Predefined income levels (respecting step="1000")
+            const incomes = [35000, 45000, 55000, 65000, 75000, 85000, 95000, 125000, 150000, 200000];
+            const income = incomes[Math.floor(Math.random() * incomes.length)];
+            
+            // Credit history in 0.5 year increments (respecting step="0.5")
+            const creditHistoryYears = Math.floor(Math.random() * 30) * 0.5; // 0 to 15 years in 0.5 increments
+            
+            document.getElementById('annual_income').value = income;
+            document.getElementById('existing_debt').value = Math.floor(Math.random() * (income * 0.5) / 500) * 500; // Round to step="500"
+            document.getElementById('credit_history_length').value = creditHistoryYears.toFixed(1);
+            document.getElementById('num_credit_accounts').value = Math.floor(Math.random() * 8) + 1;
+            document.getElementById('payment_history_score').value = Math.floor(Math.random() * 40) + 60;
+            document.getElementById('credit_utilization').value = (Math.floor(Math.random() * 80) / 100).toFixed(2); // 0.00 to 0.79 in 0.01 steps
+            document.getElementById('age').value = Math.floor(Math.random() * 40) + 25;
+            
+            // Employment type: 0-3 (matching dropdown options)
+            document.getElementById('employment_type_encoded').value = Math.floor(Math.random() * 4);
+            
+            // State: 0-7 (matching dropdown options) 
+            document.getElementById('state_encoded').value = Math.floor(Math.random() * 8);
+        }
+
+        // Add random application button
+        document.addEventListener('DOMContentLoaded', function() {
+            const randomBtn = document.createElement('button');
+            randomBtn.type = 'button';
+            randomBtn.className = 'btn';
+            randomBtn.style.background = 'linear-gradient(135deg, #3498db, #2980b9)';
+            randomBtn.style.marginTop = '10px';
+            randomBtn.innerHTML = '<i class="fas fa-random"></i> Generate Random Application';
+            randomBtn.onclick = generateRandomApplication;
+            
+            document.getElementById('prediction-form').appendChild(randomBtn);
+        });
+    </script>
+</body>
+</html>

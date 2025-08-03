@@ -411,3 +411,43 @@ class AuditTrailGenerator:
         }
         audit_str = json.dumps(audit_data, sort_keys=True)
         return hashlib.sha256(audit_str.encode()).hexdigest()
+
+
+class AuditTrail:
+    """
+    Simplified audit trail interface for model integration
+    """
+    
+    def __init__(self, model_id: str, compliance_frameworks: List[str] = None):
+        """Initialize audit trail for a specific model"""
+        self.model_id = model_id
+        self.generator = AuditTrailGenerator(model_id, compliance_frameworks)
+    
+    def log_event(self, event_type: str, details: str, metadata: Dict[str, Any] = None):
+        """Log an audit event"""
+        metadata = metadata or {}
+        
+        # Create a compliance check record for general events
+        results = {
+            "event_details": details,
+            "metadata": metadata,
+            "overall_status": "logged"
+        }
+        
+        self.generator.record_compliance_check(
+            check_type=event_type,
+            results=results,
+            user_id=metadata.get("user_id", "system")
+        )
+    
+    def get_records(self):
+        """Get all audit records"""
+        return self.generator.get_audit_trail()
+    
+    def export_trail(self, format: str = "json"):
+        """Export audit trail"""
+        return self.generator.export_audit_trail(format)
+
+
+# Backwards compatibility alias
+AuditTrailGenerator = AuditTrailGenerator
