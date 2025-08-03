@@ -123,7 +123,8 @@ class CIAFTagGenerator:
                    creator: Optional[str] = None,
                    organization: Optional[str] = None,
                    license: Optional[str] = None,
-                   contact_info: str = "contact@ciaf.org",
+                   contact_info: str = "contact@ciaf.org", # Default contact info need to review this and update
+                   
                    custom_fields: Optional[Dict[str, Any]] = None,
                    generation_params: Optional[Dict[str, Any]] = None) -> CIAFMetadataTag:
         """Create a CIAF metadata tag for AI-generated content."""
