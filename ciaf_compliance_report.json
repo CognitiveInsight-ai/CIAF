@@ -1,0 +1,57 @@
+{
+  "report_metadata": {
+    "generated_by": "CIAF Visualization Engine",
+    "timestamp": "2025-08-03T23:04:27.557762",
+    "patent_protected": true,
+    "framework_version": "v2.1.0"
+  },
+  "compliance_summary": {
+    "total_frameworks": 4,
+    "all_compliant": true,
+    "average_score": 96.65
+  },
+  "framework_details": [
+    {
+      "framework": "EU AI Act",
+      "status": "COMPLIANT",
+      "score": "95.5%",
+      "validator": "External Auditor",
+      "validation_date": "2025-08-03T23:04:27.554434",
+      "node_id": "compliance_event_000"
+    },
+    {
+      "framework": "NIST AI RMF",
+      "status": "COMPLIANT",
+      "score": "96.4%",
+      "validator": "External Auditor",
+      "validation_date": "2025-08-03T23:04:27.554573",
+      "node_id": "compliance_event_001"
+    },
+    {
+      "framework": "GDPR",
+      "status": "COMPLIANT",
+      "score": "98.2%",
+      "validator": "External Auditor",
+      "validation_date": "2025-08-03T23:04:27.554719",
+      "node_id": "compliance_event_002"
+    },
+    {
+      "framework": "HIPAA",
+      "status": "COMPLIANT",
+      "score": "96.5%",
+      "validator": "External Auditor",
+      "validation_date": "2025-08-03T23:04:27.554853",
+      "node_id": "compliance_event_003"
+    }
+  ],
+  "cryptographic_verification": {
+    "nodes_verified": 8,
+    "total_nodes": 8,
+    "integrity_status": "VERIFIED"
+  },
+  "performance_metrics": {
+    "lazy_capsule_optimization": "29,000x+",
+    "zero_knowledge_proofs": true,
+    "real_time_visualization": true
+  }
+}

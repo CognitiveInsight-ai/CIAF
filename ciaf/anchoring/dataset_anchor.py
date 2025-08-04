@@ -246,6 +246,16 @@ class DatasetAnchor:
         merkle_tree = MerkleTree(self.sample_hashes)
         return merkle_tree.get_root()
     
+    def create_true_lazy_manager(self):
+        """
+        Create a TrueLazyManager for this dataset anchor.
+        
+        Returns:
+            TrueLazyManager instance configured for this dataset
+        """
+        from .true_lazy_manager import TrueLazyManager
+        return TrueLazyManager(self.dataset_id)
+    
     def verify_capsule_integrity(self, capsule_id: str, capsule_metadata: Dict[str, Any]) -> bool:
         """
         Verify that a capsule belongs to this dataset anchor.

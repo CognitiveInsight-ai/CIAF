@@ -29,6 +29,10 @@ class MerkleTree:
         self.leaves = leaves
         self.tree = self._build_tree(leaves)
         self.root = self.tree[-1][0] if self.tree else None
+        
+        # Hash table for caching proofs and verification results
+        self._proof_cache: dict[str, list[tuple[str, str]]] = {}
+        self._verification_cache: dict[tuple[str, str], bool] = {}  # (leaf_hash, root_hash) -> bool
 
     def _hash_pair(self, hash1: str, hash2: str) -> str:
         """Hashes two child hashes together."""
@@ -63,36 +67,46 @@ class MerkleTree:
             A list of tuples (hash, position), where position is 'left' or 'right'.
             Returns an empty list if the leaf is not found or is the root itself.
         """
-        proof = []
+        # Check cache first
+        if leaf_hash in self._proof_cache:
+            return self._proof_cache[leaf_hash]
+        
         try:
-            leaf_index = self.leaves.index(leaf_hash)
+            current_index = self.leaves.index(leaf_hash)
         except ValueError:
+            # Cache the "not found" result
+            self._proof_cache[leaf_hash] = []
             return []  # Leaf not found
 
         # If it's a single-leaf tree, the leaf is the root, no proof needed
-        if len(self.leaves) == 1 and self.leaves[0] == leaf_hash:
+        if len(self.leaves) == 1:
+            self._proof_cache[leaf_hash] = []
             return []
 
-        current_hash = leaf_hash
-        for level_idx in range(len(self.tree) - 1):  # Iterate through levels from leaves up to root's parent
-            current_level = self.tree[level_idx]
-            
-            # Determine if current_hash is a left or right child based on its index
-            is_right_child = (leaf_index % 2 != 0)
-            sibling_index = leaf_index - 1 if is_right_child else leaf_index + 1
+        proof = []
+        
+        # Iterate through levels from leaves up to root's parent
+        for level in self.tree[:-1]:  # Exclude the root level
+            # Determine if current node is a left or right child
+            is_right_child = (current_index % 2 != 0)
+            sibling_index = current_index - 1 if is_right_child else current_index + 1
 
-            # Handle the case where the last element is duplicated for an odd number of nodes at this level
-            if sibling_index >= len(current_level):
-                # This means current_hash is the last element and it was duplicated.
-                # Its sibling is itself.
-                sibling_hash = current_level[leaf_index]  # Sibling is the element itself
-                proof.append((sibling_hash, 'left' if is_right_child else 'right'))  # Position is relative to current_hash
+            # Get sibling hash
+            if sibling_index < len(level):
+                sibling_hash = level[sibling_index]
             else:
-                sibling_hash = current_level[sibling_index]
-                proof.append((sibling_hash, 'left' if is_right_child else 'right'))
+                # Handle odd number of nodes - sibling is the node itself (duplicated)
+                sibling_hash = level[current_index]
+            
+            # Add sibling to proof with its position relative to current node
+            position = 'left' if is_right_child else 'right'
+            proof.append((sibling_hash, position))
+                
+            # Move up to parent node index for next level
+            current_index //= 2
 
-            leaf_index //= 2  # Move up to the parent node's index
-
+        # Cache the computed proof
+        self._proof_cache[leaf_hash] = proof
         return proof
 
     @staticmethod

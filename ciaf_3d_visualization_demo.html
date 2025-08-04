@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CIAF 3D Provenance Visualization Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            max-width: 350px;
+        }
+
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .node-info {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            z-index: 200;
+            max-width: 300px;
+            font-size: 14px;
+        }
+
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #2980b9;
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-bar {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            font-size: 12px;
+        }
+
+        .compliance-badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            margin: 2px;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #3498db;
+        }
+
+        .metric {
+            margin: 8px 0;
+            font-size: 13px;
+        }
+
+        .highlight {
+            background: rgba(52, 152, 219, 0.3);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div id="container"></div>
+    
+    <div id="info-panel">
+        <h3>🎯 CIAF 3D Provenance Visualization</h3>
+        <div class="metric"><strong>Model:</strong> JobClassificationModel_v2.1</div>
+        <div class="metric"><strong>Nodes:</strong> <span id="node-count">4</span></div>
+        <div class="metric"><strong>Edges:</strong> <span id="edge-count">3</span></div>
+        <div class="metric"><strong>Framework:</strong> <span class="highlight">CIAF v2.1.0</span></div>
+        
+        <div style="margin-top: 15px;">
+            <div class="compliance-badge">EU AI Act ✓</div>
+            <div class="compliance-badge">NIST AI RMF ✓</div>
+            <div class="compliance-badge">GDPR ✓</div>
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 12px; color: #bdc3c7;">
+            🔍 Click nodes for details<br>
+            🖱️ Drag to rotate • Scroll to zoom<br>
+            ⌨️ Press SPACE for animation
+        </div>
+    </div>
+
+    <div id="controls">
+        <h3>🎮 Controls</h3>
+        <button onclick="toggleAnimation()">Toggle Animation</button>
+        <button onclick="focusOnNode()">Focus Dataset</button>
+        <button onclick="showAuditTrail()">Show Audit Trail</button>
+        <button onclick="exportVisualization()">Export glTF</button>
+        <button onclick="toggleCompliance()">Compliance View</button>
+    </div>
+
+    <div class="legend">
+        <h3>🏷️ Node Types</h3>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #3498db;"></div>
+            <span>Dataset Anchor</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #e74c3c;"></div>
+            <span>Model Checkpoint</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #f39c12;"></div>
+            <span>Training Snapshot</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #27ae60;"></div>
+            <span>Compliance Event</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #9b59b6;"></div>
+            <span>Inference Receipt</span>
+        </div>
+    </div>
+
+    <div class="status-bar">
+        <div>🔐 Cryptographic Integrity: <span style="color: #27ae60;">VERIFIED</span></div>
+        <div>⚡ Performance: <span style="color: #27ae60;">29,000x+ Optimized</span></div>
+        <div>🛡️ Zero-Knowledge: <span style="color: #27ae60;">ENABLED</span></div>
+    </div>
+
+    <div class="node-info" id="node-tooltip"></div>
+
+    <script>
+        // CIAF 3D Visualization Engine
+        let scene, camera, renderer, controls;
+        let nodes = [];
+        let edges = [];
+        let animationActive = false;
+        let selectedNode = null;
+        let complianceMode = false;
+
+        // CIAF Provenance Data (simulated)
+        const ciafData = {
+            nodes: [
+                {
+                    id: "dataset_anchor_001",
+                    type: "Dataset Anchor",
+                    label: "Job Postings Dataset",
+                    position: { x: 0, y: 0, z: 0 },
+                    color: "#3498db",
+                    metadata: {
+                        size: "100,000 samples",
+                        source: "Multiple platforms",
+                        integrity: "SHA256: 0x123...",
+                        compliance: ["GDPR", "EU AI Act"]
+                    }
+                },
+                {
+                    id: "model_checkpoint_001",
+                    type: "Model Checkpoint",
+                    label: "JobClassifier v2.1",
+                    position: { x: 200, y: 100, z: 0 },
+                    color: "#e74c3c",
+                    metadata: {
+                        architecture: "Transformer",
+                        parameters: "150M",
+                        accuracy: "94.2%",
+                        training_time: "24 hours"
+                    }
+                },
+                {
+                    id: "training_snapshot_001",
+                    type: "Training Snapshot",
+                    label: "Training Record",
+                    position: { x: 100, y: 50, z: 150 },
+                    color: "#f39c12",
+                    metadata: {
+                        snapshot_id: "0x456...",
+                        merkle_root: "0x789...",
+                        capsules: "100,000",
+                        verification: "PASSED"
+                    }
+                },
+                {
+                    id: "compliance_event_001",
+                    type: "Compliance Event",
+                    label: "EU AI Act Validation",
+                    position: { x: 300, y: 150, z: -50 },
+                    color: "#27ae60",
+                    metadata: {
+                        framework: "EU AI Act",
+                        status: "COMPLIANT",
+                        score: "96.8%",
+                        validator: "External Auditor"
+                    }
+                },
+                {
+                    id: "inference_receipt_001",
+                    type: "Inference Receipt",
+                    label: "Prediction Receipt",
+                    position: { x: 400, y: 200, z: 100 },
+                    color: "#9b59b6",
+                    metadata: {
+                        receipt_hash: "0xabc...",
+                        confidence: "87.3%",
+                        explanation: "SHAP values",
+                        timestamp: "2025-08-03T12:00:00Z"
+                    }
+                }
+            ],
+            edges: [
+                { source: "dataset_anchor_001", target: "model_checkpoint_001", type: "trains_with" },
+                { source: "model_checkpoint_001", target: "training_snapshot_001", type: "generates" },
+                { source: "model_checkpoint_001", target: "compliance_event_001", type: "validates" },
+                { source: "model_checkpoint_001", target: "inference_receipt_001", type: "predicts" }
+            ]
+        };
+
+        function init() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a2e);
+
+            // Create camera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(200, 100, 300);
+
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('container').appendChild(renderer.domElement);
+
+            // Add controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
+            controls.target.set(200, 100, 0);
+
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+            scene.add(ambientLight);
+
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(100, 200, 100);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+
+            const pointLight = new THREE.PointLight(0x3498db, 0.6, 500);
+            pointLight.position.set(0, 100, 0);
+            scene.add(pointLight);
+
+            // Create grid
+            const gridHelper = new THREE.GridHelper(600, 20, 0x444444, 0x222222);
+            scene.add(gridHelper);
+
+            // Create nodes and edges
+            createNodes();
+            createEdges();
+
+            // Add event listeners
+            window.addEventListener('resize', onWindowResize);
+            renderer.domElement.addEventListener('click', onNodeClick);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            document.addEventListener('keydown', onKeyDown);
+
+            // Start animation loop
+            animate();
+
+            console.log('🎯 CIAF 3D Visualization initialized');
+            console.log('📊 Nodes:', ciafData.nodes.length);
+            console.log('🔗 Edges:', ciafData.edges.length);
+        }
+
+        function createNodes() {
+            ciafData.nodes.forEach(nodeData => {
+                // Create node geometry and material
+                const geometry = new THREE.SphereGeometry(20, 32, 32);
+                const material = new THREE.MeshPhongMaterial({ 
+                    color: nodeData.color,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                const node = new THREE.Mesh(geometry, material);
+                node.position.set(nodeData.position.x, nodeData.position.y, nodeData.position.z);
+                node.castShadow = true;
+                node.receiveShadow = true;
+                
+                // Add node data for interaction
+                node.userData = nodeData;
+                
+                // Add text label
+                const loader = new THREE.FontLoader();
+                // For demo purposes, we'll use a simple text representation
+                const textGeometry = new THREE.RingGeometry(25, 30, 8);
+                const textMaterial = new THREE.MeshBasicMaterial({ 
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.7
+                });
+                const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+                textMesh.position.copy(node.position);
+                textMesh.position.y += 35;
+                scene.add(textMesh);
+                
+                // Add pulsing effect for active nodes
+                if (nodeData.type === "Model Checkpoint") {
+                    const pulseGeometry = new THREE.SphereGeometry(25, 32, 32);
+                    const pulseMaterial = new THREE.MeshBasicMaterial({ 
+                        color: nodeData.color,
+                        transparent: true,
+                        opacity: 0.3
+                    });
+                    const pulseNode = new THREE.Mesh(pulseGeometry, pulseMaterial);
+                    pulseNode.position.copy(node.position);
+                    scene.add(pulseNode);
+                    node.pulseNode = pulseNode;
+                }
+                
+                scene.add(node);
+                nodes.push(node);
+            });
+        }
+
+        function createEdges() {
+            ciafData.edges.forEach(edgeData => {
+                const sourceNode = nodes.find(n => n.userData.id === edgeData.source);
+                const targetNode = nodes.find(n => n.userData.id === edgeData.target);
+                
+                if (sourceNode && targetNode) {
+                    // Create edge line
+                    const points = [sourceNode.position, targetNode.position];
+                    const geometry = new THREE.BufferGeometry().setFromPoints(points);
+                    const material = new THREE.LineBasicMaterial({ 
+                        color: 0x95a5a6,
+                        transparent: true,
+                        opacity: 0.6
+                    });
+                    
+                    const edge = new THREE.Line(geometry, material);
+                    edge.userData = edgeData;
+                    scene.add(edge);
+                    edges.push(edge);
+                    
+                    // Add arrow for direction
+                    const direction = new THREE.Vector3().subVectors(targetNode.position, sourceNode.position);
+                    const arrowHelper = new THREE.ArrowHelper(
+                        direction.normalize(),
+                        sourceNode.position,
+                        direction.length() * 0.8,
+                        0x95a5a6,
+                        20,
+                        10
+                    );
+                    scene.add(arrowHelper);
+                }
+            });
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            controls.update();
+            
+            // Animate nodes if animation is active
+            if (animationActive) {
+                const time = Date.now() * 0.001;
+                nodes.forEach((node, index) => {
+                    node.rotation.y = time + index;
+                    
+                    // Pulse effect for model checkpoints
+                    if (node.pulseNode) {
+                        const scale = 1 + 0.2 * Math.sin(time * 3 + index);
+                        node.pulseNode.scale.setScalar(scale);
+                    }
+                });
+            }
+            
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function onNodeClick(event) {
+            const mouse = new THREE.Vector2();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(nodes);
+            
+            if (intersects.length > 0) {
+                const clickedNode = intersects[0].object;
+                showNodeInfo(clickedNode, event.clientX, event.clientY);
+                
+                // Highlight selected node
+                if (selectedNode) {
+                    selectedNode.material.emissive.setHex(0x000000);
+                }
+                selectedNode = clickedNode;
+                selectedNode.material.emissive.setHex(0x444444);
+            }
+        }
+
+        function onMouseMove(event) {
+            // Add hover effects
+            const mouse = new THREE.Vector2();
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            
+            const intersects = raycaster.intersectObjects(nodes);
+            
+            // Reset all hover states
+            nodes.forEach(node => {
+                if (node !== selectedNode) {
+                    node.material.emissive.setHex(0x000000);
+                }
+            });
+            
+            if (intersects.length > 0) {
+                const hoveredNode = intersects[0].object;
+                if (hoveredNode !== selectedNode) {
+                    hoveredNode.material.emissive.setHex(0x222222);
+                }
+                document.body.style.cursor = 'pointer';
+            } else {
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        function onKeyDown(event) {
+            if (event.code === 'Space') {
+                event.preventDefault();
+                toggleAnimation();
+            }
+        }
+
+        function showNodeInfo(node, x, y) {
+            const tooltip = document.getElementById('node-tooltip');
+            const nodeData = node.userData;
+            
+            let metadataHTML = '';
+            for (const [key, value] of Object.entries(nodeData.metadata)) {
+                metadataHTML += `<div><strong>${key}:</strong> ${Array.isArray(value) ? value.join(', ') : value}</div>`;
+            }
+            
+            tooltip.innerHTML = `
+                <h4 style="margin: 0 0 10px 0; color: ${nodeData.color};">${nodeData.label}</h4>
+                <div style="margin-bottom: 10px;"><strong>Type:</strong> ${nodeData.type}</div>
+                <div style="margin-bottom: 10px;"><strong>ID:</strong> ${nodeData.id}</div>
+                ${metadataHTML}
+                <div style="margin-top: 10px; font-size: 11px; color: #95a5a6;">
+                    🔐 Cryptographically verified • 🛡️ Zero-knowledge proof
+                </div>
+            `;
+            
+            tooltip.style.left = (x + 10) + 'px';
+            tooltip.style.top = (y + 10) + 'px';
+            tooltip.style.display = 'block';
+            
+            // Hide after 5 seconds
+            setTimeout(() => {
+                tooltip.style.display = 'none';
+            }, 5000);
+        }
+
+        // Control functions
+        function toggleAnimation() {
+            animationActive = !animationActive;
+            console.log('🎮 Animation:', animationActive ? 'ON' : 'OFF');
+        }
+
+        function focusOnNode() {
+            const datasetNode = nodes.find(n => n.userData.type === "Dataset Anchor");
+            if (datasetNode) {
+                controls.target.copy(datasetNode.position);
+                camera.position.set(
+                    datasetNode.position.x + 150,
+                    datasetNode.position.y + 100,
+                    datasetNode.position.z + 150
+                );
+            }
+        }
+
+        function showAuditTrail() {
+            // Highlight audit trail connections
+            edges.forEach(edge => {
+                edge.material.color.setHex(0x3498db);
+                edge.material.opacity = 1;
+            });
+            
+            setTimeout(() => {
+                edges.forEach(edge => {
+                    edge.material.color.setHex(0x95a5a6);
+                    edge.material.opacity = 0.6;
+                });
+            }, 3000);
+        }
+
+        function exportVisualization() {
+            // Simulate glTF export
+            const exportData = {
+                asset: { version: "2.0", generator: "CIAF Visualization Engine" },
+                nodes: ciafData.nodes.map(node => ({
+                    name: node.label,
+                    translation: [node.position.x, node.position.y, node.position.z],
+                    metadata: node.metadata
+                })),
+                metadata: {
+                    framework: "CIAF v2.1.0",
+                    patent_protected: true,
+                    compliance_frameworks: ["EU AI Act", "NIST AI RMF", "GDPR"],
+                    export_timestamp: new Date().toISOString()
+                }
+            };
+            
+            console.log('📤 glTF Export:', exportData);
+            alert('📤 Visualization exported to console (check browser developer tools)');
+        }
+
+        function toggleCompliance() {
+            complianceMode = !complianceMode;
+            
+            if (complianceMode) {
+                // Highlight compliance-related nodes
+                nodes.forEach(node => {
+                    if (node.userData.type === "Compliance Event") {
+                        node.material.emissive.setHex(0x27ae60);
+                    } else {
+                        node.material.opacity = 0.5;
+                    }
+                });
+            } else {
+                // Reset all nodes
+                nodes.forEach(node => {
+                    node.material.emissive.setHex(0x000000);
+                    node.material.opacity = 0.9;
+                });
+            }
+        }
+
+        // Initialize the visualization
+        init();
+
+        // Log CIAF information
+        console.log(`
+🎯 CIAF 3D Provenance Visualization Demo
+=========================================
+📊 Performance: 29,000x+ optimized
+🔐 Cryptographic integrity: ENABLED
+🛡️ Zero-knowledge proofs: ACTIVE
+🎨 Patent-protected technology: YES
+
+🎮 Controls:
+- Drag to rotate
+- Scroll to zoom
+- Click nodes for details
+- Press SPACE for animation
+
+🏆 Patent Claims:
+1. Interactive 3D visualization of cryptographically anchored metadata chains
+2. Real-time traceability of AI decision paths for regulatory compliance
+3. Zero-knowledge provenance visualization without exposing sensitive data
+4. Novel spatial layout algorithms for AI governance data
+
+📚 Learn more: https://github.com/CognitiveInsight-ai/CIAF
+        `);
+    </script>
+</body>
+</html>

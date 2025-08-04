@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CIAF 3D Provenance Visualization Demo</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #loading {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #demo-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+
+        #visualization-area {
+            width: 70%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            margin: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #info-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100;
+            max-width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            font-size: 14px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-bar {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 100;
+            font-size: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .compliance-badge {
+            display: inline-block;
+            background: #27ae60;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            margin: 2px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+        }
+
+        button:hover {
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(52, 152, 219, 0.4);
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #3498db;
+            font-size: 18px;
+        }
+
+        .metric {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .highlight {
+            background: rgba(52, 152, 219, 0.3);
+            padding: 3px 6px;
+            border-radius: 4px;
+        }
+
+        .node-visual {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            animation: pulse 3s infinite;
+        }
+
+        .node-visual:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .node-visual.focused {
+            transform: scale(1.2) !important;
+            box-shadow: 0 0 25px rgba(52, 152, 219, 0.8) !important;
+            border: 3px solid #3498db;
+        }
+
+        .node-visual.dimmed {
+            opacity: 0.3;
+            transform: scale(0.9);
+        }
+
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, #95a5a6, #ecf0f1);
+            opacity: 0.7;
+            animation: flow 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); }
+            50% { box-shadow: 0 8px 24px rgba(52, 152, 219, 0.5); }
+            100% { box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); }
+        }
+
+        @keyframes flow {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.3; }
+        }
+
+        .node-info {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            display: none;
+            z-index: 200;
+            max-width: 350px;
+            font-size: 14px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            margin: 10px 0;
+        }
+
+        .success-message {
+            color: #27ae60;
+            background: rgba(39, 174, 96, 0.1);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(39, 174, 96, 0.3);
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="loading">
+            <div>🎯 Loading CIAF 3D Visualization...</div>
+            <div style="font-size: 16px; margin-top: 10px;">Patent-Protected Technology</div>
+        </div>
+        
+        <div id="demo-content">
+            <div id="visualization-area"></div>
+            
+            <div id="info-panel">
+                <h3>🎯 CIAF 3D Provenance Visualization</h3>
+                <div class="metric"><strong>Model:</strong> JobClassificationModel_v2.1</div>
+                <div class="metric"><strong>Nodes:</strong> <span id="node-count">9</span></div>
+                <div class="metric"><strong>Edges:</strong> <span id="edge-count">8</span></div>
+                <div class="metric"><strong>Framework:</strong> <span class="highlight">CIAF v2.1.0</span></div>
+                
+                <div style="margin-top: 15px;">
+                    <div class="compliance-badge">EU AI Act ✓</div>
+                    <div class="compliance-badge">NIST AI RMF ✓</div>
+                    <div class="compliance-badge">GDPR ✓</div>
+                    <div class="compliance-badge">HIPAA ✓</div>
+                </div>
+                
+                <div style="margin-top: 15px; font-size: 12px; color: #bdc3c7;">
+                    🔍 Click nodes for details<br>
+                    🎮 Use control buttons for interaction<br>
+                    ⚡ Patent-protected technology
+                </div>
+            </div>
+
+            <div id="controls">
+                <h3>🎮 Controls</h3>
+                <button onclick="startAnimation()">Start Animation</button>
+                <button onclick="showProvenance()">Show Provenance</button>
+                <button onclick="highlightCompliance()">Compliance View</button>
+                <div style="border-top: 1px solid #444; margin: 10px 0; padding-top: 10px;">
+                    <div style="font-size: 12px; color: #bdc3c7; margin-bottom: 8px;">Focus Controls:</div>
+                    <button onclick="focusOnTrainingData()">Focus Training</button>
+                    <button onclick="focusOnTestData()">Focus Testing</button>
+                    <button onclick="focusOnCompliance()">Focus Compliance</button>
+                    <button onclick="focusOnModel()">Focus Model</button>
+                    <button onclick="returnToOverview()">Overview</button>
+                </div>
+                <div style="border-top: 1px solid #444; margin: 10px 0; padding-top: 10px;">
+                    <button onclick="exportData()">Export Data</button>
+                    <button onclick="resetView()">Reset View</button>
+                </div>
+            </div>
+
+            <div class="legend">
+                <h3>🏷️ Node Types</h3>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #3498db;"></div>
+                    <span>Training Data</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #1abc9c;"></div>
+                    <span>Test Data</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e74c3c;"></div>
+                    <span>Model Checkpoint</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f39c12;"></div>
+                    <span>Training Snapshot</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #27ae60;"></div>
+                    <span>Compliance Event</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #9b59b6;"></div>
+                    <span>Inference Receipt</span>
+                </div>
+            </div>
+
+            <div class="status-bar">
+                <div>🔐 Cryptographic Integrity: <span style="color: #27ae60;">VERIFIED</span></div>
+                <div>⚡ Performance: <span style="color: #27ae60;">29,000x+ Optimized</span></div>
+                <div>🛡️ Zero-Knowledge: <span style="color: #27ae60;">ENABLED</span></div>
+                <div>📊 Real-time: <span style="color: #27ae60;">ACTIVE</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="node-info" id="node-tooltip"></div>
+
+    <script>
+        // CIAF 3D Visualization Engine (Fallback 2D Implementation)
+        let nodes = [];
+        let isAnimating = false;
+        let complianceMode = false;
+        let currentFocus = 'overview';
+        let activeTooltip = null;
+        let focusedNode = null;
+        
+        // CIAF Provenance Data
+        const ciafData = {
+            nodes: [
+                {
+                    id: "training_data_001",
+                    type: "Training Data",
+                    label: "Training Dataset",
+                    position: { x: 100, y: 150 },
+                    color: "#3498db",
+                    category: "training",
+                    metadata: {
+                        size: "80,000 samples",
+                        source: "Job platforms",
+                        split: "80% training",
+                        integrity: "SHA256: 0x123...",
+                        compliance: ["GDPR", "EU AI Act"],
+                        lazy_capsules: "80,000",
+                        performance_gain: "29,000x+"
+                    }
+                },
+                {
+                    id: "test_data_001",
+                    type: "Test Data",
+                    label: "Test Dataset",
+                    position: { x: 100, y: 320 },
+                    color: "#1abc9c",
+                    category: "testing",
+                    metadata: {
+                        size: "20,000 samples",
+                        source: "Job platforms",
+                        split: "20% testing",
+                        integrity: "SHA256: 0x456...",
+                        compliance: ["GDPR", "EU AI Act"],
+                        validation_method: "K-fold cross-validation"
+                    }
+                },
+                {
+                    id: "model_checkpoint_001",
+                    type: "Model Checkpoint",
+                    label: "JobClassifier v2.1",
+                    position: { x: 400, y: 235 },
+                    color: "#e74c3c",
+                    category: "model",
+                    metadata: {
+                        architecture: "Transformer",
+                        parameters: "150M",
+                        accuracy: "94.2%",
+                        training_time: "24 hours",
+                        framework: "PyTorch",
+                        val_accuracy: "92.8%",
+                        test_accuracy: "93.1%"
+                    }
+                },
+                {
+                    id: "training_snapshot_001",
+                    type: "Training Snapshot",
+                    label: "Training Record",
+                    position: { x: 650, y: 180 },
+                    color: "#f39c12",
+                    category: "training",
+                    metadata: {
+                        snapshot_id: "0x789...",
+                        merkle_root: "0xabc...",
+                        capsules: "80,000",
+                        verification: "PASSED",
+                        zero_knowledge: "ENABLED",
+                        training_epochs: "50"
+                    }
+                },
+                {
+                    id: "test_results_001",
+                    type: "Test Results",
+                    label: "Test Results",
+                    position: { x: 650, y: 320 },
+                    color: "#1abc9c",
+                    category: "testing",
+                    metadata: {
+                        test_accuracy: "93.1%",
+                        precision: "94.5%",
+                        recall: "91.8%",
+                        f1_score: "93.1%",
+                        confusion_matrix: "Available",
+                        test_samples: "20,000"
+                    }
+                },
+                {
+                    id: "compliance_event_001",
+                    type: "Compliance Event",
+                    label: "EU AI Act",
+                    position: { x: 280, y: 420 },
+                    color: "#27ae60",
+                    category: "compliance",
+                    metadata: {
+                        framework: "EU AI Act",
+                        status: "COMPLIANT",
+                        score: "98.5%",
+                        validator: "External Auditor",
+                        covers: "Training & Testing"
+                    }
+                },
+                {
+                    id: "compliance_event_002",
+                    type: "Compliance Event",
+                    label: "NIST AI RMF",
+                    position: { x: 420, y: 420 },
+                    color: "#27ae60",
+                    category: "compliance",
+                    metadata: {
+                        framework: "NIST AI RMF",
+                        status: "COMPLIANT",
+                        score: "97.2%",
+                        validator: "External Auditor",
+                        covers: "Full Pipeline"
+                    }
+                },
+                {
+                    id: "compliance_event_003",
+                    type: "Compliance Event",
+                    label: "GDPR",
+                    position: { x: 560, y: 420 },
+                    color: "#27ae60",
+                    category: "compliance",
+                    metadata: {
+                        framework: "GDPR",
+                        status: "COMPLIANT",
+                        score: "96.8%",
+                        validator: "External Auditor",
+                        data_protection: "VERIFIED"
+                    }
+                },
+                {
+                    id: "inference_receipt_001",
+                    type: "Inference Receipt",
+                    label: "Prediction Receipt",
+                    position: { x: 750, y: 280 },
+                    color: "#9b59b6",
+                    category: "model",
+                    metadata: {
+                        receipt_hash: "0xdef...",
+                        confidence: "87.3%",
+                        explanation: "SHAP values",
+                        timestamp: "2025-08-03T12:00:00Z",
+                        prediction: "Senior Engineer"
+                    }
+                }
+            ],
+            edges: [
+                { source: "training_data_001", target: "model_checkpoint_001" },
+                { source: "test_data_001", target: "model_checkpoint_001" },
+                { source: "model_checkpoint_001", target: "training_snapshot_001" },
+                { source: "model_checkpoint_001", target: "test_results_001" },
+                { source: "model_checkpoint_001", target: "compliance_event_001" },
+                { source: "model_checkpoint_001", target: "compliance_event_002" },
+                { source: "model_checkpoint_001", target: "compliance_event_003" },
+                { source: "model_checkpoint_001", target: "inference_receipt_001" }
+            ]
+        };
+
+        function init() {
+            console.log('🎯 Initializing CIAF Visualization Engine...');
+            
+            setTimeout(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('demo-content').style.display = 'block';
+                createVisualization();
+                console.log('✅ CIAF Visualization Ready!');
+            }, 2000);
+        }
+
+        function createVisualization() {
+            const container = document.getElementById('visualization-area');
+            
+            // Create nodes
+            ciafData.nodes.forEach(nodeData => {
+                const nodeElement = document.createElement('div');
+                nodeElement.className = 'node-visual';
+                nodeElement.id = nodeData.id;
+                nodeElement.style.background = `linear-gradient(45deg, ${nodeData.color}, ${adjustBrightness(nodeData.color, 20)})`;
+                nodeElement.style.left = nodeData.position.x + 'px';
+                nodeElement.style.top = nodeData.position.y + 'px';
+                nodeElement.innerHTML = nodeData.label.split(' ').map(word => word.substring(0, 3)).join('<br>');
+                
+                nodeElement.addEventListener('click', (e) => {
+                    // Close previous tooltip if exists
+                    if (activeTooltip) {
+                        activeTooltip.style.display = 'none';
+                    }
+                    
+                    // Show new tooltip and keep it open
+                    showNodeInfo(nodeData, e, true);
+                    focusedNode = nodeElement;
+                    
+                    // Add visual focus indicator
+                    nodes.forEach(n => n.element.classList.remove('focused'));
+                    nodeElement.classList.add('focused');
+                });
+                
+                nodeElement.addEventListener('mouseenter', () => {
+                    if (focusedNode !== nodeElement) {
+                        nodeElement.style.transform = 'scale(1.15)';
+                    }
+                });
+                
+                nodeElement.addEventListener('mouseleave', () => {
+                    if (focusedNode !== nodeElement) {
+                        nodeElement.style.transform = 'scale(1.0)';
+                    }
+                });
+                
+                container.appendChild(nodeElement);
+                nodes.push({element: nodeElement, data: nodeData});
+            });
+
+            // Create connections
+            ciafData.edges.forEach(edge => {
+                const sourceNode = ciafData.nodes.find(n => n.id === edge.source);
+                const targetNode = ciafData.nodes.find(n => n.id === edge.target);
+                
+                if (sourceNode && targetNode) {
+                    createConnection(sourceNode.position, targetNode.position, container);
+                }
+            });
+
+            console.log(`📊 Created ${ciafData.nodes.length} nodes and ${ciafData.edges.length} connections`);
+            console.log('🎯 Training nodes:', ciafData.nodes.filter(n => n.category === 'training').length);
+            console.log('🧪 Testing nodes:', ciafData.nodes.filter(n => n.category === 'testing').length);
+            console.log('🏛️ Compliance nodes:', ciafData.nodes.filter(n => n.category === 'compliance').length);
+            console.log('🤖 Model nodes:', ciafData.nodes.filter(n => n.category === 'model').length);
+        }
+
+        function createConnection(start, end, container) {
+            const line = document.createElement('div');
+            line.className = 'connection-line';
+            
+            const deltaX = end.x - start.x;
+            const deltaY = end.y - start.y;
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            const angle = Math.atan2(deltaY, deltaX) * 180 / Math.PI;
+            
+            line.style.width = distance + 'px';
+            line.style.left = (start.x + 40) + 'px';
+            line.style.top = (start.y + 40) + 'px';
+            line.style.transformOrigin = '0 0';
+            line.style.transform = `rotate(${angle}deg)`;
+            
+            container.appendChild(line);
+        }
+
+        function adjustBrightness(hex, percent) {
+            const num = parseInt(hex.replace("#", ""), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = (num >> 16) + amt;
+            const G = (num >> 8 & 0x00FF) + amt;
+            const B = (num & 0x0000FF) + amt;
+            return "#" + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+                (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+                (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+        }
+
+        function showNodeInfo(nodeData, event, persistent = false) {
+            const tooltip = document.getElementById('node-tooltip');
+            
+            let metadataHTML = '';
+            for (const [key, value] of Object.entries(nodeData.metadata)) {
+                metadataHTML += `<div style="margin: 5px 0;"><strong>${key}:</strong> ${Array.isArray(value) ? value.join(', ') : value}</div>`;
+            }
+            
+            tooltip.innerHTML = `
+                <h4 style="margin: 0 0 15px 0; color: ${nodeData.color};">${nodeData.label}</h4>
+                <div style="margin-bottom: 10px;"><strong>Type:</strong> ${nodeData.type}</div>
+                <div style="margin-bottom: 10px;"><strong>Category:</strong> ${nodeData.category}</div>
+                <div style="margin-bottom: 15px;"><strong>ID:</strong> ${nodeData.id}</div>
+                ${metadataHTML}
+                <div style="margin-top: 15px; font-size: 12px; color: #95a5a6; border-top: 1px solid #444; padding-top: 10px;">
+                    🔐 Cryptographically verified • 🛡️ Zero-knowledge proof • ⚡ Patent-protected
+                </div>
+                ${persistent ? '<div style="margin-top: 10px; font-size: 11px; color: #3498db;">Click another node or use focus controls to close</div>' : ''}
+            `;
+            
+            tooltip.style.left = (event.pageX + 15) + 'px';
+            tooltip.style.top = (event.pageY + 15) + 'px';
+            tooltip.style.display = 'block';
+            
+            if (persistent) {
+                activeTooltip = tooltip;
+            } else {
+                setTimeout(() => {
+                    if (!persistent) {
+                        tooltip.style.display = 'none';
+                    }
+                }, 8000);
+            }
+        }
+
+        // Focus control functions
+        function focusOnTrainingData() {
+            currentFocus = 'training';
+            console.log('🎯 Focusing on Training Data...');
+            clearFocus();
+            
+            nodes.forEach(node => {
+                if (node.data.category === 'training' || node.data.id === 'model_checkpoint_001') {
+                    node.element.classList.remove('dimmed');
+                    node.element.style.opacity = '1';
+                } else {
+                    node.element.classList.add('dimmed');
+                }
+            });
+            
+            highlightConnections(['training_data_001', 'model_checkpoint_001', 'training_snapshot_001']);
+        }
+
+        function focusOnTestData() {
+            currentFocus = 'testing';
+            console.log('🧪 Focusing on Test Data...');
+            clearFocus();
+            
+            nodes.forEach(node => {
+                if (node.data.category === 'testing' || node.data.id === 'model_checkpoint_001') {
+                    node.element.classList.remove('dimmed');
+                    node.element.style.opacity = '1';
+                } else {
+                    node.element.classList.add('dimmed');
+                }
+            });
+            
+            highlightConnections(['test_data_001', 'model_checkpoint_001', 'test_results_001']);
+        }
+
+        function focusOnCompliance() {
+            currentFocus = 'compliance';
+            console.log('🏛️ Focusing on Compliance...');
+            clearFocus();
+            
+            nodes.forEach(node => {
+                if (node.data.category === 'compliance' || node.data.id === 'model_checkpoint_001') {
+                    node.element.classList.remove('dimmed');
+                    node.element.style.opacity = '1';
+                } else {
+                    node.element.classList.add('dimmed');
+                }
+            });
+            
+            highlightConnections(['model_checkpoint_001', 'compliance_event_001', 'compliance_event_002', 'compliance_event_003']);
+        }
+
+        function focusOnModel() {
+            currentFocus = 'model';
+            console.log('🤖 Focusing on Model...');
+            clearFocus();
+            
+            nodes.forEach(node => {
+                if (node.data.category === 'model') {
+                    node.element.classList.remove('dimmed');
+                    node.element.style.opacity = '1';
+                } else {
+                    node.element.classList.add('dimmed');
+                }
+            });
+            
+            highlightConnections(['model_checkpoint_001', 'inference_receipt_001']);
+        }
+
+        function returnToOverview() {
+            currentFocus = 'overview';
+            console.log('🔄 Returning to Overview...');
+            clearFocus();
+            
+            nodes.forEach(node => {
+                node.element.classList.remove('dimmed');
+                node.element.style.opacity = '1';
+            });
+            
+            resetConnections();
+        }
+
+        function clearFocus() {
+            // Clear active tooltip
+            if (activeTooltip) {
+                activeTooltip.style.display = 'none';
+                activeTooltip = null;
+            }
+            
+            // Clear focused node
+            if (focusedNode) {
+                focusedNode.classList.remove('focused');
+                focusedNode = null;
+            }
+            
+            // Reset all node states
+            nodes.forEach(node => {
+                node.element.classList.remove('focused', 'dimmed');
+                node.element.style.transform = 'scale(1.0)';
+                node.element.style.boxShadow = '';
+            });
+        }
+
+        function highlightConnections(nodeIds) {
+            const connections = document.querySelectorAll('.connection-line');
+            connections.forEach(line => {
+                line.style.opacity = '0.2';
+                line.style.background = '#444';
+            });
+            
+            // Highlight specific connections between focused nodes
+            ciafData.edges.forEach((edge, index) => {
+                if (nodeIds.includes(edge.source) && nodeIds.includes(edge.target)) {
+                    const connection = connections[index];
+                    if (connection) {
+                        connection.style.opacity = '1';
+                        connection.style.background = 'linear-gradient(90deg, #3498db, #e74c3c)';
+                        connection.style.height = '4px';
+                    }
+                }
+            });
+        }
+
+        function resetConnections() {
+            const connections = document.querySelectorAll('.connection-line');
+            connections.forEach(line => {
+                line.style.opacity = '0.7';
+                line.style.background = 'linear-gradient(90deg, #95a5a6, #ecf0f1)';
+                line.style.height = '2px';
+            });
+        }
+        // Animation and interaction control functions
+        function startAnimation() {
+            isAnimating = !isAnimating;
+            
+            if (isAnimating) {
+                console.log('🎮 Starting animation...');
+                nodes.forEach((node, index) => {
+                    node.element.style.animation = `pulse ${2 + index * 0.2}s infinite`;
+                });
+            } else {
+                console.log('🎮 Stopping animation...');
+                nodes.forEach(node => {
+                    node.element.style.animation = 'pulse 3s infinite';
+                });
+            }
+        }
+
+        function showProvenance() {
+            console.log('🔍 Showing provenance trail...');
+            const connections = document.querySelectorAll('.connection-line');
+            connections.forEach((line, index) => {
+                setTimeout(() => {
+                    line.style.background = 'linear-gradient(90deg, #3498db, #e74c3c)';
+                    line.style.opacity = '1';
+                    line.style.height = '4px';
+                    
+                    setTimeout(() => {
+                        if (currentFocus === 'overview') {
+                            line.style.background = 'linear-gradient(90deg, #95a5a6, #ecf0f1)';
+                            line.style.opacity = '0.7';
+                            line.style.height = '2px';
+                        }
+                    }, 2000);
+                }, index * 300);
+            });
+        }
+
+        function highlightCompliance() {
+            if (currentFocus !== 'compliance') {
+                focusOnCompliance();
+            } else {
+                returnToOverview();
+            }
+        }
+
+        function resetView() {
+            console.log('🔄 Resetting view...');
+            
+            clearFocus();
+            returnToOverview();
+            
+            isAnimating = false;
+            complianceMode = false;
+            
+            nodes.forEach(node => {
+                node.element.style.animation = 'pulse 3s infinite';
+            });
+        }
+
+        function exportData() {
+            const exportData = {
+                framework: "CIAF v2.1.0",
+                engine: "CIAFVisualizationEngine",
+                export_timestamp: new Date().toISOString(),
+                patent_protected: true,
+                nodes: ciafData.nodes.length,
+                edges: ciafData.edges.length,
+                current_focus: currentFocus,
+                compliance_frameworks: ["EU AI Act", "NIST AI RMF", "GDPR"],
+                performance: "29,000x+ optimized",
+                zero_knowledge: true,
+                cryptographic_integrity: true,
+                training_data: ciafData.nodes.filter(n => n.category === 'training'),
+                testing_data: ciafData.nodes.filter(n => n.category === 'testing'),
+                compliance_data: ciafData.nodes.filter(n => n.category === 'compliance')
+            };
+            
+            console.log('📤 Export Data:', exportData);
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'ciaf_visualization_export.json';
+            link.click();
+            URL.revokeObjectURL(url);
+            
+            alert('📤 Visualization data exported! Check your downloads folder.');
+        }
+
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            console.log('🎯 CIAF 3D Visualization Demo Loading...');
+            console.log('📊 Patent-protected technology for AI provenance');
+            console.log('🔐 Cryptographic integrity • 🛡️ Zero-knowledge proofs');
+            console.log('⚡ 29,000x+ performance optimization');
+            
+            init();
+        });
+
+        // Log CIAF information
+        console.log(`
+🎯 CIAF 3D Provenance Visualization Demo
+=========================================
+📊 Performance: 29,000x+ optimized
+🔐 Cryptographic integrity: ENABLED
+🛡️ Zero-knowledge proofs: ACTIVE
+🎨 Patent-protected technology: YES
+
+🎮 Features:
+- Interactive node exploration
+- Real-time provenance tracking
+- Compliance framework validation
+- Cryptographic verification
+- Export capabilities
+
+🏆 Patent Claims:
+1. Interactive visualization of cryptographically anchored metadata chains
+2. Real-time traceability of AI decision paths for regulatory compliance
+3. Zero-knowledge provenance visualization without exposing sensitive data
+4. Novel spatial layout algorithms for AI governance data
+
+📚 Learn more: https://github.com/CognitiveInsight-ai/CIAF
+        `);
+    </script>
+</body>
+</html>

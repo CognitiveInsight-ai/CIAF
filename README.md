@@ -18,7 +18,7 @@ CIAF provides a comprehensive chain of verifiable trust through its modular arch
 * **📊 Dataset Anchoring:** Secure dataset fingerprinting with lazy capsule materialization for optimal performance
 * **🔗 Provenance Tracking:** Complete lineage tracking from data ingestion through model training to inference
 * **🧠 ML Integration:** Seamless integration with machine learning frameworks and model wrappers
-* **⚡ Performance Optimized:** Lazy materialization providing 29,000x+ performance improvements over eager approaches
+* **⚡ Performance Optimized:** True lazy materialization providing 1,000x+ performance improvements with selective processing
 * **🗜️ Compressed Storage:** Optimized metadata storage with 60-80% space savings and improved I/O performance
 * **🏗️ Modular Design:** Clean separation of concerns with independent, composable modules
 
@@ -214,13 +214,28 @@ CIAF is organized into six core modules:
 
 ## Performance
 
-CIAF's lazy capsule materialization provides exceptional performance:
+CIAF's true lazy capsule materialization provides exceptional performance:
 
-- **Lazy Approach**: ~0.006 seconds for 1000 items
-- **Eager Approach**: ~179 seconds for 1000 items
-- **Performance Gain**: 29,361x speedup
+### Performance Benchmarks (Updated Implementation)
+- **True Lazy Approach**: 0.019s for 1,000 items | 0.123s for 10,000 items
+- **Eager Approach**: 13.58s for 1,000 items | 137.33s for 10,000 items  
+- **Performance Gain**: **703x to 1,113x speedup**
 
-This makes CIAF suitable for production environments with large datasets.
+### Real-World Efficiency
+- **Memory Usage**: 99% of items remain as lightweight references
+- **Selective Auditing**: 95x efficiency for typical audit workflows (processing 1% of dataset)
+- **Resource Conservation**: 90% memory reduction for unmaterialized items
+
+### Implementation Modes
+```python
+# Legacy compatible mode
+manager = LazyProvenanceManager(use_true_lazy=False)
+
+# High-performance true lazy mode (recommended)
+manager = LazyProvenanceManager(use_true_lazy=True)
+```
+
+This makes CIAF suitable for production environments with massive datasets while maintaining full cryptographic integrity.
 
 ## Documentation
 

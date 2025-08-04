@@ -1,0 +1,476 @@
+{
+  "asset": {
+    "version": "2.0",
+    "generator": "CIAF Visualization Engine v2.1.0",
+    "copyright": "Patent Protected Technology"
+  },
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "Training Dataset",
+      "translation": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mesh": 0,
+      "extras": {
+        "ciaf_metadata": {
+          "size": "100,000 samples",
+          "source": "Multiple platforms",
+          "integrity_hash": "d65be7cefa2468278b1095eee7a8807470b4399ac782ce135edeaeb58e94e726",
+          "compliance": [
+            "GDPR",
+            "EU AI Act"
+          ],
+          "last_validation": "2025-08-03T23:04:27.547624",
+          "lazy_capsules": 100000,
+          "performance_gain": "29,000x+"
+        },
+        "merkle_proof": "fd5835785409112d86501bdcd96a122b76b0e6f8f320f9cc28ea37ff912f1a69",
+        "node_type": "Dataset Anchor"
+      }
+    },
+    {
+      "name": "JobClassificationModel_v2.1",
+      "translation": [
+        200.0,
+        100.0,
+        0.0
+      ],
+      "mesh": 1,
+      "extras": {
+        "ciaf_metadata": {
+          "architecture": "Transformer",
+          "parameters": "150M",
+          "accuracy": "94.2%",
+          "training_time": "24 hours",
+          "framework": "PyTorch",
+          "version": "2.1.0",
+          "optimizer": "AdamW",
+          "learning_rate": 0.001
+        },
+        "merkle_proof": "e14a9856e23e2bf5b00204a8ed2a65c3440a3cee4e1ebd3b9ec1dcb3425c4f63",
+        "node_type": "Model Checkpoint"
+      }
+    },
+    {
+      "name": "Training Record",
+      "translation": [
+        100.0,
+        50.0,
+        150.0
+      ],
+      "mesh": 2,
+      "extras": {
+        "ciaf_metadata": {
+          "snapshot_id": "5ab80b23e25b3bcb7e24d652f11cc6505c36841717d13c93ca591c16a132c1c9",
+          "merkle_root": "320b5066090a5afb1e523dd3c4677aa80b786b70cd45e95d5a7930fce6a36213",
+          "capsules": 100000,
+          "verification": "PASSED",
+          "zero_knowledge_proof": true,
+          "cryptographic_integrity": "VERIFIED"
+        },
+        "merkle_proof": "0a9d2dd79a7978b39ad86acbdd97824b8cc680d70240c5cb2f8908a26ba130fd",
+        "node_type": "Training Snapshot"
+      }
+    },
+    {
+      "name": "EU AI Act Validation",
+      "translation": [
+        300.0,
+        150.0,
+        -50.0
+      ],
+      "mesh": 3,
+      "extras": {
+        "ciaf_metadata": {
+          "framework": "EU AI Act",
+          "status": "COMPLIANT",
+          "score": "95.5%",
+          "validator": "External Auditor",
+          "validation_date": "2025-08-03T23:04:27.554434",
+          "certificate_hash": "a585d763aa77a3e4457a67c5fe8e72a7c908a0e608463a91b9d88d19e672ff23"
+        },
+        "merkle_proof": "6f4d553c2d8cded57c88c1066a331342ee88f9ca21dd2319b7cea571976605ee",
+        "node_type": "Compliance Event"
+      }
+    },
+    {
+      "name": "NIST AI RMF Validation",
+      "translation": [
+        350.0,
+        150.0,
+        -25.0
+      ],
+      "mesh": 4,
+      "extras": {
+        "ciaf_metadata": {
+          "framework": "NIST AI RMF",
+          "status": "COMPLIANT",
+          "score": "96.4%",
+          "validator": "External Auditor",
+          "validation_date": "2025-08-03T23:04:27.554573",
+          "certificate_hash": "b05b79cc532bcf02ad67f15c43debd416cc12812b25eb277f9d657ac2d73a774"
+        },
+        "merkle_proof": "d5e0d4ec007487104135770ec6215adc18c5da6e839ba2822bd838a4f6cba91a",
+        "node_type": "Compliance Event"
+      }
+    },
+    {
+      "name": "GDPR Validation",
+      "translation": [
+        400.0,
+        150.0,
+        0.0
+      ],
+      "mesh": 5,
+      "extras": {
+        "ciaf_metadata": {
+          "framework": "GDPR",
+          "status": "COMPLIANT",
+          "score": "98.2%",
+          "validator": "External Auditor",
+          "validation_date": "2025-08-03T23:04:27.554719",
+          "certificate_hash": "5e0bb36798341542a8cfc8e870ada26689e921dd9835e86b86b8c5f4258d7369"
+        },
+        "merkle_proof": "472db2c7627fd2372df41df638163e71183b0813230126d06fc2d5d09173570a",
+        "node_type": "Compliance Event"
+      }
+    },
+    {
+      "name": "HIPAA Validation",
+      "translation": [
+        450.0,
+        150.0,
+        25.0
+      ],
+      "mesh": 6,
+      "extras": {
+        "ciaf_metadata": {
+          "framework": "HIPAA",
+          "status": "COMPLIANT",
+          "score": "96.5%",
+          "validator": "External Auditor",
+          "validation_date": "2025-08-03T23:04:27.554853",
+          "certificate_hash": "f6451eb6f683ab18f902d208062edb7f1a70e64f5aab9cf8d98a2d4daef3804a"
+        },
+        "merkle_proof": "07314eb5ff983317c8e0257a5493497e93d5e45e687744a906bed045e151c0d6",
+        "node_type": "Compliance Event"
+      }
+    },
+    {
+      "name": "Prediction Receipt",
+      "translation": [
+        400.0,
+        200.0,
+        100.0
+      ],
+      "mesh": 7,
+      "extras": {
+        "ciaf_metadata": {
+          "receipt_hash": "e4013dba104d9557fb02a3d4e30c2b07e90f5da38a7ae8d1ac7b035265a9c1c7",
+          "confidence": "87.3%",
+          "explanation": "SHAP values available",
+          "timestamp": "2025-08-03T23:04:27.554983",
+          "prediction": "Senior Software Engineer",
+          "certainty_score": 0.873,
+          "bias_detection": "PASSED"
+        },
+        "merkle_proof": "15888c485cd878e573b5d6862bc0ab9c64d6d8b730818f01af8f6ba083a316e8",
+        "node_type": "Inference Receipt"
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Training Dataset_mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 0
+          },
+          "material": 0
+        }
+      ]
+    },
+    {
+      "name": "JobClassificationModel_v2.1_mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 2
+          },
+          "material": 1
+        }
+      ]
+    },
+    {
+      "name": "Training Record_mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 4
+          },
+          "material": 2
+        }
+      ]
+    },
+    {
+      "name": "EU AI Act Validation_mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 6
+          },
+          "material": 3
+        }
+      ]
+    },
+    {
+      "name": "NIST AI RMF Validation_mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 8
+          },
+          "material": 4
+        }
+      ]
+    },
+    {
+      "name": "GDPR Validation_mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 10
+          },
+          "material": 5
+        }
+      ]
+    },
+    {
+      "name": "HIPAA Validation_mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 12
+          },
+          "material": 6
+        }
+      ]
+    },
+    {
+      "name": "Prediction Receipt_mesh",
+      "primitives": [
+        {
+          "attributes": {
+            "POSITION": 14
+          },
+          "material": 7
+        }
+      ]
+    }
+  ],
+  "materials": [
+    {
+      "name": "Training Dataset_material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.20392156862745098,
+          0.596078431372549,
+          0.8588235294117647,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "JobClassificationModel_v2.1_material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.9058823529411765,
+          0.2980392156862745,
+          0.23529411764705882,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Training Record_material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.9529411764705882,
+          0.611764705882353,
+          0.07058823529411765,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "EU AI Act Validation_material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.15294117647058825,
+          0.6823529411764706,
+          0.3764705882352941,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "NIST AI RMF Validation_material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.15294117647058825,
+          0.6823529411764706,
+          0.3764705882352941,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "GDPR Validation_material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.15294117647058825,
+          0.6823529411764706,
+          0.3764705882352941,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "HIPAA Validation_material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.15294117647058825,
+          0.6823529411764706,
+          0.3764705882352941,
+          1.0
+        ]
+      }
+    },
+    {
+      "name": "Prediction Receipt_material",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6078431372549019,
+          0.34901960784313724,
+          0.7137254901960784,
+          1.0
+        ]
+      }
+    }
+  ],
+  "buffers": [],
+  "bufferViews": [],
+  "accessors": [],
+  "extensions": {
+    "CIAF_provenance": {
+      "edges": [
+        {
+          "source": "dataset_anchor_001",
+          "target": "model_checkpoint_001",
+          "type": "trains_with",
+          "weight": 1.0,
+          "metadata": {
+            "provenance_strength": 0.9681755086490095,
+            "cryptographic_link": true,
+            "verification_status": "VERIFIED"
+          }
+        },
+        {
+          "source": "model_checkpoint_001",
+          "target": "training_snapshot_001",
+          "type": "generates",
+          "weight": 1.0,
+          "metadata": {
+            "provenance_strength": 0.8206459522997568,
+            "cryptographic_link": true,
+            "verification_status": "VERIFIED"
+          }
+        },
+        {
+          "source": "model_checkpoint_001",
+          "target": "inference_receipt_001",
+          "type": "predicts",
+          "weight": 1.0,
+          "metadata": {
+            "provenance_strength": 0.8724705659598594,
+            "cryptographic_link": true,
+            "verification_status": "VERIFIED"
+          }
+        },
+        {
+          "source": "model_checkpoint_001",
+          "target": "compliance_event_000",
+          "type": "validates",
+          "weight": 1.0,
+          "metadata": {
+            "provenance_strength": 0.848591724709649,
+            "cryptographic_link": true,
+            "verification_status": "VERIFIED"
+          }
+        },
+        {
+          "source": "model_checkpoint_001",
+          "target": "compliance_event_001",
+          "type": "validates",
+          "weight": 1.0,
+          "metadata": {
+            "provenance_strength": 0.8256958128124846,
+            "cryptographic_link": true,
+            "verification_status": "VERIFIED"
+          }
+        },
+        {
+          "source": "model_checkpoint_001",
+          "target": "compliance_event_002",
+          "type": "validates",
+          "weight": 1.0,
+          "metadata": {
+            "provenance_strength": 0.994636265899259,
+            "cryptographic_link": true,
+            "verification_status": "VERIFIED"
+          }
+        },
+        {
+          "source": "model_checkpoint_001",
+          "target": "compliance_event_003",
+          "type": "validates",
+          "weight": 1.0,
+          "metadata": {
+            "provenance_strength": 0.8215577914048389,
+            "cryptographic_link": true,
+            "verification_status": "VERIFIED"
+          }
+        }
+      ],
+      "compliance_data": [
+        "EU AI Act",
+        "NIST AI RMF",
+        "GDPR",
+        "HIPAA",
+        "SOX",
+        "PCI DSS",
+        "ISO 27001",
+        "CCPA"
+      ],
+      "patent_protected": true
+    }
+  }
+}
