@@ -1,47 +1,70 @@
 # CIAF: Cognitive Insight AI Framework
 
 [![PyPI - Version](https://img.shields.io/pypi/v/ciaf.svg)](https://pypi.org/project/ciaf/)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/your-github-username/ciaf/main.yml?branch=main)](https://github.com/your-github-username/ciaf/actions)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/CognitiveInsight-ai/CIAF/ci.yml?branch=main)](https://github.com/CognitiveInsight-ai/CIAF/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Documentation Status](https://readthedocs.org/projects/ciaf/badge/?version=latest)](https://ciaf.readthedocs.io/en/latest/?badge=latest)
 
 ## Overview
 
-The **Cognitive Insight AI Framework (CIAF)** is a modular Python framework designed to provide **verifiable transparency, provenance tracking, and cryptographic integrity for Artificial Intelligence (AI) systems** throughout their development and deployment lifecycle. Built with a focus on modularity and performance, CIAF enables developers to add comprehensive audit trails and verification capabilities to their AI workflows.
+The **Cognitive Insight AI Framework (CIAF)** is a production-ready Python framework for **verifiable AI transparency, provenance tracking, and compliance monitoring**. CIAF enables organizations to build trustworthy AI systems with comprehensive audit trails, cryptographic integrity verification, and automated compliance reporting.
 
 ## Key Features
 
-CIAF provides a comprehensive chain of verifiable trust through its modular architecture:
+### 🔐 Cryptographic Security
+- **End-to-end integrity verification** with cryptographic hashing
+- **Digital signatures** for tamper-proof audit trails  
+- **Key management** for secure operations
 
-* **🔐 Cryptographic Core:** Robust encryption, key derivation, and hash-based integrity verification
-* **📊 Dataset Anchoring:** Secure dataset fingerprinting with lazy capsule materialization for optimal performance
-* **🔗 Provenance Tracking:** Complete lineage tracking from data ingestion through model training to inference
-* **🧠 ML Integration:** Seamless integration with machine learning frameworks and model wrappers
-* **⚡ Performance Optimized:** True lazy materialization providing 1,000x+ performance improvements with selective processing
-* **🗜️ Compressed Storage:** Optimized metadata storage with 60-80% space savings and improved I/O performance
-* **🏗️ Modular Design:** Clean separation of concerns with independent, composable modules
+### 📊 Data & Model Provenance
+- **Dataset anchoring** with cryptographic fingerprinting
+- **Complete lineage tracking** from data to decisions
+- **Version control** for models and datasets
+
+### 🏛️ Compliance Automation
+- **Multi-framework support**: EU AI Act, NIST AI RMF, GDPR, HIPAA, SOX, ISO 27001
+- **Automated report generation** with evidence collection
+- **Real-time compliance monitoring** and validation
+
+### ⚡ Production Performance
+- **Lazy materialization** for 1000x+ performance improvements
+- **Compressed metadata storage** with 60-80% space savings
+- **Scalable architecture** for enterprise deployments
+
+### 🔧 Easy Integration
+- **Framework-agnostic** - works with scikit-learn, TensorFlow, PyTorch, etc.
+- **Decorator-based** metadata capture with minimal code changes
+- **CLI tools** for setup and compliance reporting
 
 ## Installation
 
-You can install `ciaf` using pip:
-
+### Basic Installation
 ```bash
 pip install ciaf
 ```
 
-Or for development:
+### With Optional Dependencies
+```bash
+# For compliance reporting
+pip install ciaf[compliance]
 
+# For web dashboards  
+pip install ciaf[web]
+
+# For advanced visualizations
+pip install ciaf[viz]
+
+# Everything
+pip install ciaf[dev,compliance,web,viz]
+```
+
+### Development Installation
 ```bash
 git clone https://github.com/CognitiveInsight-ai/CIAF.git
 cd CIAF
-make install-dev
-```
-
-Alternatively, you can use the setup script:
-
-```bash
-python scripts/setup_dev_env.py
+pip install -e .
+pip install -r requirements-dev.txt
 ```
 
 ## Quick Examples

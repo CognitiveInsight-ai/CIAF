@@ -7,19 +7,20 @@ and public disclosure documents.
 """
 
 import json
-from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass
-from enum import Enum
 import os
+from dataclasses import dataclass
+from datetime import datetime, timedelta, timezone
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple
 
+from .audit_trails import AuditEventType, AuditTrailGenerator, ComplianceAuditRecord
 from .regulatory_mapping import ComplianceFramework, RegulatoryMapper
-from .audit_trails import AuditTrailGenerator, AuditEventType, ComplianceAuditRecord
-from .risk_assessment import RiskAssessmentEngine, ComprehensiveRiskAssessment
+from .risk_assessment import ComprehensiveRiskAssessment, RiskAssessmentEngine
 
 
 class TransparencyLevel(Enum):
     """Levels of transparency disclosure."""
+
     PUBLIC = "public"
     REGULATORY = "regulatory"
     INTERNAL = "internal"
@@ -28,6 +29,7 @@ class TransparencyLevel(Enum):
 
 class ReportAudience(Enum):
     """Target audience for transparency reports."""
+
     GENERAL_PUBLIC = "general_public"
     REGULATORS = "regulators"
     TECHNICAL_AUDITORS = "technical_auditors"
@@ -39,7 +41,7 @@ class ReportAudience(Enum):
 @dataclass
 class AlgorithmicTransparencyMetrics:
     """Metrics for algorithmic transparency."""
-    
+
     model_name: str
     model_version: str
     model_type: str
@@ -57,7 +59,7 @@ class AlgorithmicTransparencyMetrics:
 @dataclass
 class DecisionExplanation:
     """Individual decision explanation."""
-    
+
     decision_id: str
     timestamp: str
     input_data_summary: Dict[str, Any]
@@ -75,7 +77,7 @@ class DecisionExplanation:
 @dataclass
 class TransparencyReport:
     """Comprehensive transparency report."""
-    
+
     report_id: str
     title: str
     model_name: str
@@ -91,7 +93,7 @@ class TransparencyReport:
     contact_information: Dict[str, str]
     publication_date: str
     next_report_due: str
-    
+
     def to_html(self) -> str:
         """Convert transparency report to HTML."""
         html = f"""<!DOCTYPE html>
@@ -126,33 +128,33 @@ class TransparencyReport:
         <p><strong>Published:</strong> {self.publication_date[:10]}</p>
     </div>
 """
-        
+
         # Executive Summary
         html += self._generate_executive_summary()
-        
+
         # Algorithmic Transparency Section
         html += self._generate_algorithmic_transparency_section()
-        
+
         # Performance and Fairness Metrics
         html += self._generate_performance_section()
-        
+
         # Decision Explanations
         html += self._generate_explanations_section()
-        
+
         # Public Interest Assessment
         html += self._generate_public_interest_section()
-        
+
         # Accountability Measures
         html += self._generate_accountability_section()
-        
+
         # Contact Information
         html += self._generate_contact_section()
-        
+
         html += """
 </body>
 </html>"""
         return html
-    
+
     def _generate_executive_summary(self) -> str:
         """Generate executive summary section."""
         return f"""
@@ -171,7 +173,7 @@ class TransparencyReport:
             <li><strong>Transparency Level:</strong> {self.transparency_level.value.title()} disclosure</li>
         </ul>
     </div>"""
-    
+
     def _generate_algorithmic_transparency_section(self) -> str:
         """Generate algorithmic transparency section."""
         return f"""
@@ -203,7 +205,7 @@ class TransparencyReport:
                  for key, value in self.algorithmic_metrics.decision_boundary_analysis.items()])}
         </ul>
     </div>"""
-    
+
     def _generate_performance_section(self) -> str:
         """Generate performance and fairness section."""
         return f"""
@@ -236,20 +238,24 @@ class TransparencyReport:
             </div>
         </div>
     </div>"""
-    
+
     def _generate_explanations_section(self) -> str:
         """Generate decision explanations section."""
-        explanations_html = """
+        explanations_html = (
+            """
     <div class="section">
         <h2>Decision Explanations</h2>
         <p>The following section provides sample explanations for model decisions to illustrate 
         how the AI system makes its determinations.</p>
         
         <h3>Explanation Coverage</h3>
-        <p>Explanations are provided for """ + f"{self.algorithmic_metrics.explainability_coverage:.1%}" + """ of all decisions.</p>
+        <p>Explanations are provided for """
+            + f"{self.algorithmic_metrics.explainability_coverage:.1%}"
+            + """ of all decisions.</p>
         
         <h3>Sample Explanations</h3>"""
-        
+        )
+
         for i, explanation in enumerate(self.decision_explanations_sample[:3], 1):
             explanations_html += f"""
         <div class="explanation">
@@ -270,10 +276,10 @@ class TransparencyReport:
             
             {f"<p><strong>Human Review Required:</strong> {'Yes' if explanation.human_review_required else 'No'}</p>" if explanation.human_review_required else ""}
         </div>"""
-        
+
         explanations_html += "</div>"
         return explanations_html
-    
+
     def _generate_public_interest_section(self) -> str:
         """Generate public interest assessment section."""
         return f"""
@@ -288,7 +294,7 @@ class TransparencyReport:
         <p><strong>Mitigation Measures:</strong> {', '.join(assessment.get('mitigation_measures', []))}</p>
         ''' for assessment in self.public_interest_assessments])}
     </div>"""
-    
+
     def _generate_accountability_section(self) -> str:
         """Generate accountability measures section."""
         return f"""
@@ -314,7 +320,7 @@ class TransparencyReport:
         <p><strong>Review Frequency:</strong> {self.accountability_measures.get('review_frequency', 'Not specified')}</p>
         <p><strong>Next Review Due:</strong> {self.next_report_due[:10]}</p>
     </div>"""
-    
+
     def _generate_contact_section(self) -> str:
         """Generate contact information section."""
         return f"""
@@ -336,40 +342,46 @@ class TransparencyReport:
 
 class TransparencyReportGenerator:
     """Automated transparency report generator."""
-    
+
     def __init__(self, model_name: str):
         """Initialize transparency report generator."""
         self.model_name = model_name
         self.regulatory_mapper = RegulatoryMapper()
         self.generated_reports: List[TransparencyReport] = []
-        
+
     def generate_public_transparency_report(
         self,
         model_version: str,
         audit_generator: AuditTrailGenerator,
         risk_engine: RiskAssessmentEngine,
-        reporting_period_days: int = 90
+        reporting_period_days: int = 90,
     ) -> TransparencyReport:
         """Generate public transparency report."""
-        
+
         end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=reporting_period_days)
-        
+
         # Collect audit data
         audit_events = audit_generator.get_audit_trail(start_date, end_date)
-        prediction_events = [e for e in audit_events if e.event_type == AuditEventType.MODEL_PREDICTION]
-        
+        prediction_events = [
+            e for e in audit_events if e.event_type == AuditEventType.MODEL_PREDICTION
+        ]
+
         # Generate algorithmic transparency metrics
         algorithmic_metrics = self._generate_algorithmic_metrics(
             model_version, audit_events, prediction_events
         )
-        
+
         # Generate sample decision explanations
-        decision_explanations = self._generate_decision_explanations(prediction_events[:5])
-        
+        decision_explanations = self._generate_decision_explanations(
+            prediction_events[:5]
+        )
+
         # Generate public interest assessments
-        public_interest_assessments = self._generate_public_interest_assessments(audit_events)
-        
+        public_interest_assessments = self._generate_public_interest_assessments(
+            audit_events
+        )
+
         # Define accountability measures
         accountability_measures = {
             "responsible_team": "AI Ethics and Governance Team",
@@ -378,17 +390,17 @@ class TransparencyReportGenerator:
                 "Continuous performance monitoring",
                 "Weekly bias assessment",
                 "Monthly fairness audits",
-                "Quarterly comprehensive reviews"
+                "Quarterly comprehensive reviews",
             ],
             "redress_mechanisms": [
                 "Individual decision appeals process",
                 "Public feedback portal",
                 "Ethics committee review",
-                "External audit process"
+                "External audit process",
             ],
-            "review_frequency": "Quarterly"
+            "review_frequency": "Quarterly",
         }
-        
+
         # Contact information
         contact_info = {
             "primary_contact": "AI Transparency Team",
@@ -396,9 +408,9 @@ class TransparencyReportGenerator:
             "phone": "+1-555-0199",
             "address": "123 AI Ethics Street, Tech City, TC 12345",
             "dpo": "Chief Data Protection Officer",
-            "ethics_committee": "AI Ethics Committee"
+            "ethics_committee": "AI Ethics Committee",
         }
-        
+
         report = TransparencyReport(
             report_id=f"TRANSPARENCY_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             title=f"AI Transparency Report - {self.model_name}",
@@ -407,7 +419,7 @@ class TransparencyReportGenerator:
             reporting_period={
                 "start": start_date.isoformat()[:10],
                 "end": end_date.isoformat()[:10],
-                "days": reporting_period_days
+                "days": reporting_period_days,
             },
             transparency_level=TransparencyLevel.PUBLIC,
             target_audience=ReportAudience.GENERAL_PUBLIC,
@@ -418,27 +430,27 @@ class TransparencyReportGenerator:
             accountability_measures=accountability_measures,
             contact_information=contact_info,
             publication_date=datetime.now(timezone.utc).isoformat(),
-            next_report_due=(end_date + timedelta(days=90)).isoformat()
+            next_report_due=(end_date + timedelta(days=90)).isoformat(),
         )
-        
+
         self.generated_reports.append(report)
         return report
-    
+
     def generate_regulatory_transparency_report(
         self,
         framework: ComplianceFramework,
         model_version: str,
         audit_generator: AuditTrailGenerator,
         risk_engine: RiskAssessmentEngine,
-        reporting_period_days: int = 90
+        reporting_period_days: int = 90,
     ) -> TransparencyReport:
         """Generate regulatory transparency report."""
-        
+
         # Similar to public report but with more technical detail
         public_report = self.generate_public_transparency_report(
             model_version, audit_generator, risk_engine, reporting_period_days
         )
-        
+
         # Modify for regulatory audience
         regulatory_report = TransparencyReport(
             report_id=f"REG_TRANSPARENCY_{framework.value}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
@@ -455,39 +467,53 @@ class TransparencyReportGenerator:
             accountability_measures=public_report.accountability_measures,
             contact_information=public_report.contact_information,
             publication_date=datetime.now(timezone.utc).isoformat(),
-            next_report_due=public_report.next_report_due
+            next_report_due=public_report.next_report_due,
         )
-        
+
         # Add regulatory-specific contact
-        regulatory_report.contact_information["regulatory_liaison"] = "Chief Compliance Officer"
-        regulatory_report.contact_information["regulatory_email"] = "compliance@organization.com"
-        
+        regulatory_report.contact_information["regulatory_liaison"] = (
+            "Chief Compliance Officer"
+        )
+        regulatory_report.contact_information["regulatory_email"] = (
+            "compliance@organization.com"
+        )
+
         self.generated_reports.append(regulatory_report)
         return regulatory_report
-    
+
     def generate_technical_transparency_report(
         self,
         model_version: str,
         audit_generator: AuditTrailGenerator,
         risk_engine: RiskAssessmentEngine,
-        reporting_period_days: int = 30
+        reporting_period_days: int = 30,
     ) -> TransparencyReport:
         """Generate technical transparency report for technical auditors."""
-        
+
         base_report = self.generate_public_transparency_report(
             model_version, audit_generator, risk_engine, reporting_period_days
         )
-        
+
         # Enhanced algorithmic metrics for technical audience
         enhanced_metrics = base_report.algorithmic_metrics
-        enhanced_metrics.decision_boundary_analysis.update({
-            "model_architecture": "Deep Neural Network with attention mechanism",
-            "training_methodology": "Supervised learning with cross-validation",
-            "hyperparameters": {"learning_rate": 0.001, "batch_size": 32, "epochs": 100},
-            "validation_methodology": "5-fold cross-validation",
-            "test_set_performance": {"accuracy": 0.89, "precision": 0.87, "recall": 0.91}
-        })
-        
+        enhanced_metrics.decision_boundary_analysis.update(
+            {
+                "model_architecture": "Deep Neural Network with attention mechanism",
+                "training_methodology": "Supervised learning with cross-validation",
+                "hyperparameters": {
+                    "learning_rate": 0.001,
+                    "batch_size": 32,
+                    "epochs": 100,
+                },
+                "validation_methodology": "5-fold cross-validation",
+                "test_set_performance": {
+                    "accuracy": 0.89,
+                    "precision": 0.87,
+                    "recall": 0.91,
+                },
+            }
+        )
+
         technical_report = TransparencyReport(
             report_id=f"TECH_TRANSPARENCY_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
             title=f"Technical Transparency Report - {self.model_name}",
@@ -503,51 +529,59 @@ class TransparencyReportGenerator:
             accountability_measures=base_report.accountability_measures,
             contact_information=base_report.contact_information,
             publication_date=datetime.now(timezone.utc).isoformat(),
-            next_report_due=base_report.next_report_due
+            next_report_due=base_report.next_report_due,
         )
-        
+
         # Add technical contact
         technical_report.contact_information["technical_lead"] = "Chief AI Officer"
-        technical_report.contact_information["technical_email"] = "ai-tech@organization.com"
-        
+        technical_report.contact_information["technical_email"] = (
+            "ai-tech@organization.com"
+        )
+
         self.generated_reports.append(technical_report)
         return technical_report
-    
+
     def _generate_algorithmic_metrics(
         self,
         model_version: str,
         audit_events: List[ComplianceAuditRecord],
-        prediction_events: List[ComplianceAuditRecord]
+        prediction_events: List[ComplianceAuditRecord],
     ) -> AlgorithmicTransparencyMetrics:
         """Generate algorithmic transparency metrics."""
-        
+
         # Calculate explainability coverage
-        explained_predictions = [e for e in prediction_events if e.metadata.get('explanation')]
-        explainability_coverage = len(explained_predictions) / len(prediction_events) if prediction_events else 0
-        
+        explained_predictions = [
+            e for e in prediction_events if e.metadata.get("explanation")
+        ]
+        explainability_coverage = (
+            len(explained_predictions) / len(prediction_events)
+            if prediction_events
+            else 0
+        )
+
         # Simulate metrics (in practice, these would be calculated from real data)
         performance_metrics = {
             "accuracy": 0.87,
             "precision": 0.84,
             "recall": 0.89,
             "f1_score": 0.86,
-            "auc_roc": 0.91
+            "auc_roc": 0.91,
         }
-        
+
         bias_metrics = {
             "demographic_parity": 0.08,
             "equalized_odds": 0.06,
             "statistical_parity": 0.09,
-            "individual_fairness": 0.92
+            "individual_fairness": 0.92,
         }
-        
+
         fairness_indicators = {
             "overall_fairness_score": 0.88,
             "disparate_impact_ratio": 0.89,
             "calibration_score": 0.91,
-            "treatment_equality": 0.87
+            "treatment_equality": 0.87,
         }
-        
+
         feature_importance = {
             "feature_1": 0.23,
             "feature_2": 0.18,
@@ -558,23 +592,23 @@ class TransparencyReportGenerator:
             "feature_7": 0.07,
             "feature_8": 0.04,
             "feature_9": 0.02,
-            "feature_10": 0.01
+            "feature_10": 0.01,
         }
-        
+
         uncertainty_quantification = {
             "prediction_uncertainty": 0.15,
             "epistemic_uncertainty": 0.08,
             "aleatoric_uncertainty": 0.12,
-            "confidence_calibration": 0.89
+            "confidence_calibration": 0.89,
         }
-        
+
         decision_boundary_analysis = {
             "boundary_complexity": "medium",
             "decision_regions": 5,
             "overlap_regions": 2,
-            "stability_score": 0.91
+            "stability_score": 0.91,
         }
-        
+
         return AlgorithmicTransparencyMetrics(
             model_name=self.model_name,
             model_version=model_version,
@@ -583,7 +617,7 @@ class TransparencyReportGenerator:
                 "size": "100,000 samples",
                 "features": 50,
                 "data_sources": ["Internal database", "Public datasets"],
-                "collection_period": "2023-01-01 to 2023-12-31"
+                "collection_period": "2023-01-01 to 2023-12-31",
             },
             performance_metrics=performance_metrics,
             bias_metrics=bias_metrics,
@@ -592,17 +626,16 @@ class TransparencyReportGenerator:
             decision_boundary_analysis=decision_boundary_analysis,
             feature_importance=feature_importance,
             uncertainty_quantification=uncertainty_quantification,
-            last_updated=datetime.now(timezone.utc).isoformat()
+            last_updated=datetime.now(timezone.utc).isoformat(),
         )
-    
+
     def _generate_decision_explanations(
-        self,
-        prediction_events: List[ComplianceAuditRecord]
+        self, prediction_events: List[ComplianceAuditRecord]
     ) -> List[DecisionExplanation]:
         """Generate sample decision explanations."""
-        
+
         explanations = []
-        
+
         for i, event in enumerate(prediction_events):
             explanation = DecisionExplanation(
                 decision_id=event.event_id,
@@ -610,7 +643,7 @@ class TransparencyReportGenerator:
                 input_data_summary={
                     "features_count": 10,
                     "data_types": ["numerical", "categorical", "text"],
-                    "missing_values": 0
+                    "missing_values": 0,
                 },
                 prediction=f"Class_{i % 3}",  # Simulate classification
                 confidence_score=0.85 + (i * 0.03) % 0.15,  # Simulate confidence
@@ -621,72 +654,98 @@ class TransparencyReportGenerator:
                 },
                 decision_rationale=f"The model predicted Class_{i % 3} based on the combination of feature values, with feature_1 being the most influential positive contributor.",
                 alternative_outcomes=[
-                    {"outcome": f"Class_{(i+1) % 3}", "probability": 0.15 - (i * 0.02) % 0.10},
-                    {"outcome": f"Class_{(i+2) % 3}", "probability": 0.05 + (i * 0.01) % 0.05}
+                    {
+                        "outcome": f"Class_{(i+1) % 3}",
+                        "probability": 0.15 - (i * 0.02) % 0.10,
+                    },
+                    {
+                        "outcome": f"Class_{(i+2) % 3}",
+                        "probability": 0.05 + (i * 0.01) % 0.05,
+                    },
                 ],
-                uncertainty_factors=["Limited training data for this region", "Feature correlation effects"],
+                uncertainty_factors=[
+                    "Limited training data for this region",
+                    "Feature correlation effects",
+                ],
                 bias_check_results={
                     "bias_detected": False,
                     "protected_attributes_checked": ["age", "gender"],
-                    "fairness_score": 0.91
+                    "fairness_score": 0.91,
                 },
-                human_review_required=i % 4 == 0  # Every 4th decision requires review
+                human_review_required=i % 4 == 0,  # Every 4th decision requires review
             )
             explanations.append(explanation)
-        
+
         return explanations
-    
+
     def _generate_public_interest_assessments(
-        self,
-        audit_events: List[ComplianceAuditRecord]
+        self, audit_events: List[ComplianceAuditRecord]
     ) -> List[Dict[str, Any]]:
         """Generate public interest assessments."""
-        
+
         return [
             {
                 "title": "Economic Impact Assessment",
                 "description": "The AI model's deployment has potential economic implications for various stakeholders. Analysis shows neutral to positive economic impact.",
                 "impact_level": "Medium",
-                "mitigation_measures": ["Regular economic impact monitoring", "Stakeholder engagement", "Impact assessment reviews"],
-                "affected_groups": ["Job seekers", "Employers", "Service providers"]
+                "mitigation_measures": [
+                    "Regular economic impact monitoring",
+                    "Stakeholder engagement",
+                    "Impact assessment reviews",
+                ],
+                "affected_groups": ["Job seekers", "Employers", "Service providers"],
             },
             {
                 "title": "Social Equity Assessment",
                 "description": "Evaluation of the model's impact on social equity and fair treatment across different demographic groups.",
                 "impact_level": "Medium",
-                "mitigation_measures": ["Bias monitoring", "Fairness improvements", "Community feedback integration"],
-                "affected_groups": ["Minority communities", "Low-income populations", "Elderly citizens"]
+                "mitigation_measures": [
+                    "Bias monitoring",
+                    "Fairness improvements",
+                    "Community feedback integration",
+                ],
+                "affected_groups": [
+                    "Minority communities",
+                    "Low-income populations",
+                    "Elderly citizens",
+                ],
             },
             {
                 "title": "Privacy and Civil Liberties Assessment",
                 "description": "Assessment of potential impacts on individual privacy rights and civil liberties.",
                 "impact_level": "Low",
-                "mitigation_measures": ["Privacy-preserving techniques", "Data minimization", "Consent management"],
-                "affected_groups": ["All data subjects", "Privacy advocates"]
-            }
+                "mitigation_measures": [
+                    "Privacy-preserving techniques",
+                    "Data minimization",
+                    "Consent management",
+                ],
+                "affected_groups": ["All data subjects", "Privacy advocates"],
+            },
         ]
-    
-    def save_transparency_report(self, report: TransparencyReport, output_dir: str, format: str = "html") -> str:
+
+    def save_transparency_report(
+        self, report: TransparencyReport, output_dir: str, format: str = "html"
+    ) -> str:
         """Save transparency report to file."""
-        
+
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
-        
+
         filename = f"{report.report_id}.{format.lower()}"
         filepath = os.path.join(output_dir, filename)
-        
+
         if format.lower() == "html":
             content = report.to_html()
         elif format.lower() == "json":
             content = self._report_to_json(report)
         else:
             raise ValueError(f"Unsupported format: {format}")
-        
-        with open(filepath, 'w', encoding='utf-8') as f:
+
+        with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
-        
+
         return filepath
-    
+
     def _report_to_json(self, report: TransparencyReport) -> str:
         """Convert transparency report to JSON."""
         report_dict = {
@@ -704,58 +763,69 @@ class TransparencyReportGenerator:
                 "bias_metrics": report.algorithmic_metrics.bias_metrics,
                 "fairness_indicators": report.algorithmic_metrics.fairness_indicators,
                 "feature_importance": report.algorithmic_metrics.feature_importance,
-                "uncertainty_quantification": report.algorithmic_metrics.uncertainty_quantification
+                "uncertainty_quantification": report.algorithmic_metrics.uncertainty_quantification,
             },
             "decision_explanations_count": len(report.decision_explanations_sample),
             "public_interest_assessments": report.public_interest_assessments,
             "accountability_measures": report.accountability_measures,
             "contact_information": report.contact_information,
             "publication_date": report.publication_date,
-            "next_report_due": report.next_report_due
+            "next_report_due": report.next_report_due,
         }
-        
+
         return json.dumps(report_dict, indent=2)
-    
+
     def generate_transparency_dashboard_data(self) -> Dict[str, Any]:
         """Generate data for transparency dashboard."""
-        
+
         if not self.generated_reports:
             return {"message": "No transparency reports available"}
-        
+
         latest_report = self.generated_reports[-1]
-        
+
         dashboard_data = {
             "model_overview": {
                 "name": latest_report.model_name,
                 "version": latest_report.model_version,
                 "type": latest_report.algorithmic_metrics.model_type,
-                "last_updated": latest_report.algorithmic_metrics.last_updated[:10]
+                "last_updated": latest_report.algorithmic_metrics.last_updated[:10],
             },
             "transparency_metrics": {
                 "explainability_coverage": latest_report.algorithmic_metrics.explainability_coverage,
-                "overall_performance": latest_report.algorithmic_metrics.performance_metrics.get("accuracy", 0),
-                "fairness_score": latest_report.algorithmic_metrics.fairness_indicators.get("overall_fairness_score", 0),
-                "bias_score": max(latest_report.algorithmic_metrics.bias_metrics.values()) if latest_report.algorithmic_metrics.bias_metrics else 0
+                "overall_performance": latest_report.algorithmic_metrics.performance_metrics.get(
+                    "accuracy", 0
+                ),
+                "fairness_score": latest_report.algorithmic_metrics.fairness_indicators.get(
+                    "overall_fairness_score", 0
+                ),
+                "bias_score": (
+                    max(latest_report.algorithmic_metrics.bias_metrics.values())
+                    if latest_report.algorithmic_metrics.bias_metrics
+                    else 0
+                ),
             },
             "reporting_status": {
                 "reports_generated": len(self.generated_reports),
                 "last_report_date": latest_report.publication_date[:10],
                 "next_report_due": latest_report.next_report_due[:10],
-                "compliance_status": "compliant"
+                "compliance_status": "compliant",
             },
             "public_interest": {
                 "assessments_conducted": len(latest_report.public_interest_assessments),
                 "impact_level": "medium",
-                "mitigation_measures_active": sum(len(assessment.get("mitigation_measures", [])) for assessment in latest_report.public_interest_assessments)
-            }
+                "mitigation_measures_active": sum(
+                    len(assessment.get("mitigation_measures", []))
+                    for assessment in latest_report.public_interest_assessments
+                ),
+            },
         }
-        
+
         return dashboard_data
-    
+
     def get_generated_reports(self) -> List[TransparencyReport]:
         """Get list of all generated transparency reports."""
         return self.generated_reports
-    
+
     def clear_reports(self):
         """Clear all generated reports."""
         self.generated_reports.clear()

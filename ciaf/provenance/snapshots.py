@@ -7,9 +7,9 @@ records of what data was used to train a specific model version.
 
 import json
 from datetime import datetime
-from typing import Dict, Any
+from typing import Any, Dict
 
-from ..core import sha256_hash, MerkleTree
+from ..core import MerkleTree, sha256_hash
 
 
 class ModelAggregationKey:
@@ -17,47 +17,51 @@ class ModelAggregationKey:
     Represents a Model Aggregation Key (MAK) for authenticating training data.
     Used to generate and verify signatures for data used in model training.
     """
-    
+
     def __init__(self, key_id: str, secret_material: str):
         """
         Initializes a ModelAggregationKey.
-        
+
         Args:
             key_id: Unique identifier for this MAK.
             secret_material: Secret string used for key derivation.
         """
-        from ..core import derive_key, secure_random_bytes, SALT_LENGTH
         import hashlib
-        
+
+        from ..core import SALT_LENGTH, derive_key, secure_random_bytes
+
         self.key_id = key_id
         self.salt = secure_random_bytes(SALT_LENGTH)
-        self.derived_mak_key = derive_key(self.salt, secret_material.encode('utf-8'), 32)
+        self.derived_mak_key = derive_key(
+            self.salt, secret_material.encode("utf-8"), 32
+        )
         print(f"MAK '{self.key_id}' initialized.")
 
     def generate_data_signature(self, data_hash: str) -> str:
         """
         Generates a signature for a given data hash.
-        
+
         Args:
             data_hash: SHA256 hash of the data to sign.
-            
+
         Returns:
             Hexadecimal signature string.
         """
         import hashlib
+
         h = hashlib.sha256()
         h.update(self.derived_mak_key)
-        h.update(data_hash.encode('utf-8'))
+        h.update(data_hash.encode("utf-8"))
         return h.hexdigest()
 
     def verify_data_signature(self, data_hash: str, signature: str) -> bool:
         """
         Verifies a signature against a data hash.
-        
+
         Args:
             data_hash: SHA256 hash of the data.
             signature: Signature to verify.
-            
+
         Returns:
             True if the signature is valid, False otherwise.
         """
@@ -70,12 +74,16 @@ class TrainingSnapshot:
     Represents a snapshot of model training, including parameters and data provenance.
     Creates a tamper-evident record of what data was used to train a specific model version.
     """
-    
-    def __init__(self, model_version: str, training_parameters: dict,
-                 provenance_capsule_hashes: list[str]):
+
+    def __init__(
+        self,
+        model_version: str,
+        training_parameters: dict,
+        provenance_capsule_hashes: list[str],
+    ):
         """
         Initializes a TrainingSnapshot.
-        
+
         Args:
             model_version: Version identifier for the trained model.
             training_parameters: Dictionary of training hyperparameters.
@@ -87,24 +95,28 @@ class TrainingSnapshot:
         self.timestamp = datetime.now().isoformat()
         self.merkle_tree = MerkleTree(self.provenance_capsule_hashes)
         self.merkle_root_hash = self.merkle_tree.get_root()
-        
+
         # Initialize metadata dictionary for lazy capsule support
         self.metadata = {
-            'model_version': self.model_version,
-            'timestamp': self.timestamp,
-            'merkle_root_hash': self.merkle_root_hash,
-            'training_parameters': self.training_parameters
+            "model_version": self.model_version,
+            "timestamp": self.timestamp,
+            "merkle_root_hash": self.merkle_root_hash,
+            "training_parameters": self.training_parameters,
         }
-        
+
         self.snapshot_id = sha256_hash(
-            f"{self.model_version}-{self.merkle_root_hash}-{self.timestamp}-{json.dumps(self.training_parameters, sort_keys=True)}".encode('utf-8')
+            f"{self.model_version}-{self.merkle_root_hash}-{self.timestamp}-{json.dumps(self.training_parameters, sort_keys=True)}".encode(
+                "utf-8"
+            )
         )
-        print(f"Training Snapshot '{self.snapshot_id}' created for model '{self.model_version}'.")
+        print(
+            f"Training Snapshot '{self.snapshot_id}' created for model '{self.model_version}'."
+        )
 
     def to_json(self) -> dict:
         """
         Serializes the TrainingSnapshot to a JSON-compatible dictionary.
-        
+
         Returns:
             Dictionary representation of the snapshot.
         """
@@ -122,10 +134,10 @@ class TrainingSnapshot:
     def from_json(cls, json_data: dict):
         """
         Reconstructs a TrainingSnapshot from JSON data.
-        
+
         Args:
             json_data: Dictionary representation from to_json().
-            
+
         Returns:
             Reconstructed TrainingSnapshot instance.
         """
@@ -143,14 +155,16 @@ class TrainingSnapshot:
     def verify_provenance(self, provenance_capsule_hash: str) -> bool:
         """
         Verifies that a specific provenance capsule hash was used in training.
-        
+
         Args:
             provenance_capsule_hash: Hash proof from a provenance capsule.
-            
+
         Returns:
             True if the hash was used in training, False otherwise.
         """
         if provenance_capsule_hash not in self.provenance_capsule_hashes:
             return False
         proof = self.merkle_tree.get_proof(provenance_capsule_hash)
-        return MerkleTree.verify_proof(provenance_capsule_hash, self.merkle_root_hash, proof)
+        return MerkleTree.verify_proof(
+            provenance_capsule_hash, self.merkle_root_hash, proof
+        )

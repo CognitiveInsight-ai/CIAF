@@ -5,14 +5,15 @@ This module maps CIAF capabilities to various regulatory frameworks and provides
 compliance requirement checklists for different jurisdictions and industries.
 """
 
-from enum import Enum
-from dataclasses import dataclass
-from typing import Dict, List, Any, Optional, Set
 import json
+from dataclasses import dataclass
+from enum import Enum
+from typing import Any, Dict, List, Optional, Set
 
 
 class ComplianceFramework(Enum):
     """Supported regulatory and compliance frameworks."""
+
     EU_AI_ACT = "eu_ai_act"
     NIST_AI_RMF = "nist_ai_rmf"
     GDPR = "gdpr"
@@ -30,6 +31,7 @@ class ComplianceFramework(Enum):
 @dataclass
 class ComplianceRequirement:
     """Individual compliance requirement."""
+
     requirement_id: str
     framework: ComplianceFramework
     title: str
@@ -41,7 +43,7 @@ class ComplianceRequirement:
     verification_method: str
     documentation_required: List[str]
     risk_level: str = "medium"
-    
+
     def is_satisfied_by_ciaf(self) -> bool:
         """Check if this requirement can be satisfied by CIAF capabilities."""
         return len(self.ciaf_capabilities) > 0
@@ -49,12 +51,12 @@ class ComplianceRequirement:
 
 class RegulatoryMapper:
     """Maps CIAF capabilities to regulatory requirements."""
-    
+
     def __init__(self):
         """Initialize with predefined regulatory mappings."""
         self.requirements: Dict[ComplianceFramework, List[ComplianceRequirement]] = {}
         self._initialize_requirements()
-    
+
     def _initialize_requirements(self):
         """Initialize all regulatory framework requirements."""
         self._initialize_eu_ai_act()
@@ -68,7 +70,7 @@ class RegulatoryMapper:
         self._initialize_fda_ai_ml()
         self._initialize_fair_lending()
         self._initialize_general()
-    
+
     def _initialize_eu_ai_act(self):
         """Initialize EU AI Act requirements."""
         self.requirements[ComplianceFramework.EU_AI_ACT] = [
@@ -82,16 +84,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "audit_trails",
                     "risk_assessment",
-                    "provenance_tracking"
+                    "provenance_tracking",
                 ],
                 implementation_notes="CIAF provides comprehensive audit trails and risk assessment capabilities",
                 verification_method="Document risk management processes and audit trail integrity",
                 documentation_required=[
                     "risk_assessment_report",
                     "audit_trail_documentation",
-                    "provenance_records"
+                    "provenance_records",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="EU_AI_ACT_002",
@@ -103,16 +105,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "dataset_anchoring",
                     "provenance_capsules",
-                    "cryptographic_integrity"
+                    "cryptographic_integrity",
                 ],
                 implementation_notes="CIAF dataset anchoring ensures data integrity and provenance",
                 verification_method="Verify dataset fingerprints and provenance capsule integrity",
                 documentation_required=[
                     "dataset_documentation",
                     "data_quality_reports",
-                    "provenance_validation"
+                    "provenance_validation",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="EU_AI_ACT_003",
@@ -124,16 +126,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "inference_receipts",
                     "training_snapshots",
-                    "transparency_reports"
+                    "transparency_reports",
                 ],
                 implementation_notes="CIAF inference receipts provide verifiable transparency",
                 verification_method="Generate and validate transparency reports",
                 documentation_required=[
                     "transparency_reports",
                     "user_documentation",
-                    "inference_explanations"
+                    "inference_explanations",
                 ],
-                risk_level="medium"
+                risk_level="medium",
             ),
             ComplianceRequirement(
                 requirement_id="EU_AI_ACT_004",
@@ -145,16 +147,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "audit_trails",
                     "inference_receipts",
-                    "training_snapshots"
+                    "training_snapshots",
                 ],
                 implementation_notes="CIAF automatically maintains comprehensive records",
                 verification_method="Audit trail completeness and integrity verification",
                 documentation_required=[
                     "operational_records",
                     "audit_logs",
-                    "compliance_reports"
+                    "compliance_reports",
                 ],
-                risk_level="medium"
+                risk_level="medium",
             ),
             ComplianceRequirement(
                 requirement_id="EU_AI_ACT_005",
@@ -166,19 +168,19 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "inference_receipts",
                     "audit_trails",
-                    "manual_review_flags"
+                    "manual_review_flags",
                 ],
                 implementation_notes="CIAF supports human oversight through verifiable audit trails",
                 verification_method="Document human oversight procedures and decision points",
                 documentation_required=[
                     "oversight_procedures",
                     "human_review_logs",
-                    "escalation_protocols"
+                    "escalation_protocols",
                 ],
-                risk_level="high"
-            )
+                risk_level="high",
+            ),
         ]
-    
+
     def _initialize_nist_ai_rmf(self):
         """Initialize NIST AI Risk Management Framework requirements."""
         self.requirements[ComplianceFramework.NIST_AI_RMF] = [
@@ -192,16 +194,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "risk_assessment",
                     "audit_trails",
-                    "compliance_validation"
+                    "compliance_validation",
                 ],
                 implementation_notes="CIAF supports comprehensive risk management through audit trails",
                 verification_method="Risk management documentation and validation reports",
                 documentation_required=[
                     "risk_management_strategy",
                     "risk_assessment_reports",
-                    "mitigation_strategies"
+                    "mitigation_strategies",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="NIST_AI_RMF_002",
@@ -213,16 +215,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "model_versioning",
                     "training_snapshots",
-                    "audit_trails"
+                    "audit_trails",
                 ],
                 implementation_notes="CIAF provides comprehensive model and data inventory",
                 verification_method="System inventory completeness and accuracy verification",
                 documentation_required=[
                     "ai_system_inventory",
                     "system_dependencies",
-                    "version_control_records"
+                    "version_control_records",
                 ],
-                risk_level="medium"
+                risk_level="medium",
             ),
             ComplianceRequirement(
                 requirement_id="NIST_AI_RMF_003",
@@ -234,19 +236,19 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "risk_assessment",
                     "inference_receipts",
-                    "audit_trails"
+                    "audit_trails",
                 ],
                 implementation_notes="CIAF enables comprehensive impact assessment through provenance tracking",
                 verification_method="Impact assessment documentation and validation",
                 documentation_required=[
                     "impact_assessment_reports",
                     "stakeholder_analysis",
-                    "risk_mitigation_plans"
+                    "risk_mitigation_plans",
                 ],
-                risk_level="high"
-            )
+                risk_level="high",
+            ),
         ]
-    
+
     def _initialize_gdpr(self):
         """Initialize GDPR requirements."""
         self.requirements[ComplianceFramework.GDPR] = [
@@ -260,16 +262,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "audit_trails",
                     "data_access_logging",
-                    "provenance_tracking"
+                    "provenance_tracking",
                 ],
                 implementation_notes="CIAF audit trails provide comprehensive data processing records",
                 verification_method="Audit trail completeness for data processing activities",
                 documentation_required=[
                     "processing_records",
                     "data_flow_documentation",
-                    "purpose_limitation_evidence"
+                    "purpose_limitation_evidence",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="GDPR_002",
@@ -281,16 +283,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "provenance_tracking",
                     "audit_trails",
-                    "data_lineage"
+                    "data_lineage",
                 ],
                 implementation_notes="CIAF provenance enables data subject rights compliance",
                 verification_method="Demonstrate data subject rights fulfillment capabilities",
                 documentation_required=[
                     "rights_fulfillment_procedures",
                     "data_subject_request_logs",
-                    "erasure_verification"
+                    "erasure_verification",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="GDPR_003",
@@ -302,19 +304,19 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "cryptographic_integrity",
                     "privacy_preserving_provenance",
-                    "minimal_data_exposure"
+                    "minimal_data_exposure",
                 ],
                 implementation_notes="CIAF implements privacy by design through cryptographic provenance",
                 verification_method="Privacy engineering assessment and validation",
                 documentation_required=[
                     "privacy_impact_assessment",
                     "design_documentation",
-                    "privacy_controls_verification"
+                    "privacy_controls_verification",
                 ],
-                risk_level="high"
-            )
+                risk_level="high",
+            ),
         ]
-    
+
     def _initialize_hipaa(self):
         """Initialize HIPAA requirements."""
         self.requirements[ComplianceFramework.HIPAA] = [
@@ -328,16 +330,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "audit_trails",
                     "access_controls",
-                    "user_authentication"
+                    "user_authentication",
                 ],
                 implementation_notes="CIAF audit trails support HIPAA administrative safeguards",
                 verification_method="Administrative controls documentation and audit",
                 documentation_required=[
                     "administrative_procedures",
                     "access_control_policies",
-                    "audit_procedures"
+                    "audit_procedures",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="HIPAA_002",
@@ -349,16 +351,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "cryptographic_protection",
                     "secure_storage",
-                    "access_logging"
+                    "access_logging",
                 ],
                 implementation_notes="CIAF cryptographic controls support physical safeguards",
                 verification_method="Physical controls assessment and validation",
                 documentation_required=[
                     "physical_security_procedures",
                     "facility_access_controls",
-                    "media_controls"
+                    "media_controls",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="HIPAA_003",
@@ -367,22 +369,18 @@ class RegulatoryMapper:
                 description="Implement technical safeguards for PHI",
                 category="Technical Controls",
                 mandatory=True,
-                ciaf_capabilities=[
-                    "encryption",
-                    "audit_trails",
-                    "integrity_controls"
-                ],
+                ciaf_capabilities=["encryption", "audit_trails", "integrity_controls"],
                 implementation_notes="CIAF provides comprehensive technical safeguards",
                 verification_method="Technical controls testing and validation",
                 documentation_required=[
                     "technical_procedures",
                     "encryption_documentation",
-                    "integrity_verification"
+                    "integrity_verification",
                 ],
-                risk_level="high"
-            )
+                risk_level="high",
+            ),
         ]
-    
+
     def _initialize_sox(self):
         """Initialize Sarbanes-Oxley requirements."""
         self.requirements[ComplianceFramework.SOX] = [
@@ -396,16 +394,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "audit_trails",
                     "integrity_controls",
-                    "change_management"
+                    "change_management",
                 ],
                 implementation_notes="CIAF audit trails support SOX internal controls",
                 verification_method="Internal controls testing and documentation",
                 documentation_required=[
                     "internal_control_documentation",
                     "testing_procedures",
-                    "deficiency_reports"
+                    "deficiency_reports",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="SOX_002",
@@ -417,19 +415,19 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "audit_trails",
                     "immutable_records",
-                    "long_term_storage"
+                    "long_term_storage",
                 ],
                 implementation_notes="CIAF provides immutable audit trails for SOX compliance",
                 verification_method="Documentation completeness and retention verification",
                 documentation_required=[
                     "records_retention_policy",
                     "documentation_procedures",
-                    "audit_trail_reports"
+                    "audit_trail_reports",
                 ],
-                risk_level="medium"
-            )
+                risk_level="medium",
+            ),
         ]
-    
+
     def _initialize_iso_27001(self):
         """Initialize ISO 27001 Information Security Management requirements."""
         self.requirements[ComplianceFramework.ISO_27001] = [
@@ -443,16 +441,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "audit_trails",
                     "risk_assessment",
-                    "security_controls"
+                    "security_controls",
                 ],
                 implementation_notes="CIAF provides comprehensive audit trails supporting ISMS requirements",
                 verification_method="ISMS documentation and effectiveness assessment",
                 documentation_required=[
                     "isms_documentation",
                     "security_policy",
-                    "risk_assessment_report"
+                    "risk_assessment_report",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="ISO_27001_002",
@@ -464,16 +462,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "risk_assessment",
                     "security_monitoring",
-                    "audit_trails"
+                    "audit_trails",
                 ],
                 implementation_notes="CIAF risk assessment capabilities align with ISO 27001 requirements",
                 verification_method="Risk assessment process validation and documentation",
                 documentation_required=[
                     "risk_assessment_methodology",
                     "risk_treatment_plan",
-                    "risk_register"
+                    "risk_register",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="ISO_27001_003",
@@ -485,16 +483,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "access_control",
                     "audit_trails",
-                    "identity_management"
+                    "identity_management",
                 ],
                 implementation_notes="CIAF audit trails provide access control monitoring",
                 verification_method="Access control effectiveness testing",
                 documentation_required=[
                     "access_control_policy",
                     "user_access_matrix",
-                    "access_logs"
+                    "access_logs",
                 ],
-                risk_level="medium"
+                risk_level="medium",
             ),
             ComplianceRequirement(
                 requirement_id="ISO_27001_004",
@@ -506,16 +504,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "cryptographic_integrity",
                     "key_management",
-                    "data_encryption"
+                    "data_encryption",
                 ],
                 implementation_notes="CIAF uses cryptographic techniques for data integrity and security",
                 verification_method="Cryptographic implementation validation",
                 documentation_required=[
                     "cryptographic_policy",
                     "key_management_procedures",
-                    "encryption_standards"
+                    "encryption_standards",
                 ],
-                risk_level="high"
+                risk_level="high",
             ),
             ComplianceRequirement(
                 requirement_id="ISO_27001_005",
@@ -527,16 +525,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "continuous_monitoring",
                     "security_metrics",
-                    "audit_trails"
+                    "audit_trails",
                 ],
                 implementation_notes="CIAF provides continuous monitoring and security metrics",
                 verification_method="Monitoring process effectiveness assessment",
                 documentation_required=[
                     "monitoring_procedures",
                     "security_metrics_report",
-                    "performance_indicators"
+                    "performance_indicators",
                 ],
-                risk_level="medium"
+                risk_level="medium",
             ),
             ComplianceRequirement(
                 requirement_id="ISO_27001_006",
@@ -548,19 +546,19 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "incident_detection",
                     "audit_trails",
-                    "forensic_analysis"
+                    "forensic_analysis",
                 ],
                 implementation_notes="CIAF audit trails support incident detection and forensic analysis",
                 verification_method="Incident management process validation",
                 documentation_required=[
                     "incident_response_plan",
                     "incident_logs",
-                    "lessons_learned_report"
+                    "lessons_learned_report",
                 ],
-                risk_level="medium"
-            )
+                risk_level="medium",
+            ),
         ]
-    
+
     def _initialize_pci_dss(self):
         """Initialize PCI DSS Payment Card Industry requirements."""
         self.requirements[ComplianceFramework.PCI_DSS] = [
@@ -574,19 +572,19 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "network_monitoring",
                     "security_controls",
-                    "audit_trails"
+                    "audit_trails",
                 ],
                 implementation_notes="CIAF security monitoring supports PCI DSS network requirements",
                 verification_method="Network security configuration validation",
                 documentation_required=[
                     "firewall_configuration",
                     "network_diagram",
-                    "security_standards"
+                    "security_standards",
                 ],
-                risk_level="high"
+                risk_level="high",
             )
         ]
-    
+
     def _initialize_ccpa(self):
         """Initialize California Consumer Privacy Act requirements."""
         self.requirements[ComplianceFramework.CCPA] = [
@@ -600,19 +598,19 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "data_governance",
                     "audit_trails",
-                    "privacy_controls"
+                    "privacy_controls",
                 ],
                 implementation_notes="CIAF data governance supports CCPA consumer rights",
                 verification_method="Consumer rights implementation validation",
                 documentation_required=[
                     "privacy_policy",
                     "consumer_request_procedures",
-                    "data_inventory"
+                    "data_inventory",
                 ],
-                risk_level="medium"
+                risk_level="medium",
             )
         ]
-    
+
     def _initialize_fda_ai_ml(self):
         """Initialize FDA AI/ML Device requirements."""
         self.requirements[ComplianceFramework.FDA_AI_ML] = [
@@ -626,19 +624,19 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "model_validation",
                     "audit_trails",
-                    "quality_management"
+                    "quality_management",
                 ],
                 implementation_notes="CIAF validation processes support FDA AI/ML requirements",
                 verification_method="Medical device validation documentation",
                 documentation_required=[
                     "software_validation_plan",
                     "clinical_evaluation",
-                    "risk_analysis"
+                    "risk_analysis",
                 ],
-                risk_level="high"
+                risk_level="high",
             )
         ]
-    
+
     def _initialize_fair_lending(self):
         """Initialize Fair Lending Act requirements."""
         self.requirements[ComplianceFramework.FAIR_LENDING] = [
@@ -652,16 +650,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "bias_detection",
                     "fairness_assessment",
-                    "audit_trails"
+                    "audit_trails",
                 ],
                 implementation_notes="CIAF bias detection supports fair lending compliance",
                 verification_method="Bias assessment and fairness testing",
                 documentation_required=[
                     "fair_lending_policy",
                     "bias_testing_report",
-                    "monitoring_procedures"
+                    "monitoring_procedures",
                 ],
-                risk_level="high"
+                risk_level="high",
             )
         ]
 
@@ -678,16 +676,16 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "model_versioning",
                     "training_snapshots",
-                    "audit_trails"
+                    "audit_trails",
                 ],
                 implementation_notes="CIAF provides comprehensive model governance capabilities",
                 verification_method="Model governance process documentation and validation",
                 documentation_required=[
                     "model_governance_policy",
                     "version_control_procedures",
-                    "change_management_logs"
+                    "change_management_logs",
                 ],
-                risk_level="medium"
+                risk_level="medium",
             ),
             ComplianceRequirement(
                 requirement_id="GENERAL_002",
@@ -699,71 +697,90 @@ class RegulatoryMapper:
                 ciaf_capabilities=[
                     "inference_receipts",
                     "provenance_tracking",
-                    "transparency_reports"
+                    "transparency_reports",
                 ],
                 implementation_notes="CIAF enables model transparency through provenance tracking",
                 verification_method="Transparency documentation and validation",
                 documentation_required=[
                     "explainability_reports",
                     "transparency_documentation",
-                    "user_guides"
+                    "user_guides",
                 ],
-                risk_level="low"
-            )
+                risk_level="low",
+            ),
         ]
-    
+
     def get_requirements(
         self,
         frameworks: List[ComplianceFramework],
         mandatory_only: bool = False,
-        category: Optional[str] = None
+        category: Optional[str] = None,
     ) -> List[ComplianceRequirement]:
         """Get requirements for specified frameworks."""
-        
+
         requirements = []
         for framework in frameworks:
             if framework in self.requirements:
                 framework_reqs = self.requirements[framework]
-                
+
                 if mandatory_only:
                     framework_reqs = [r for r in framework_reqs if r.mandatory]
-                
+
                 if category:
-                    framework_reqs = [r for r in framework_reqs if r.category == category]
-                
+                    framework_reqs = [
+                        r for r in framework_reqs if r.category == category
+                    ]
+
                 requirements.extend(framework_reqs)
-        
+
         return requirements
-    
+
     def get_ciaf_coverage(
-        self,
-        frameworks: List[ComplianceFramework]
+        self, frameworks: List[ComplianceFramework]
     ) -> Dict[str, Any]:
         """Analyze CIAF coverage for specified frameworks."""
-        
+
         requirements = self.get_requirements(frameworks)
-        
+
         total_requirements = len(requirements)
-        satisfied_requirements = len([r for r in requirements if r.is_satisfied_by_ciaf()])
+        satisfied_requirements = len(
+            [r for r in requirements if r.is_satisfied_by_ciaf()]
+        )
         mandatory_requirements = len([r for r in requirements if r.mandatory])
-        satisfied_mandatory = len([r for r in requirements if r.mandatory and r.is_satisfied_by_ciaf()])
-        
+        satisfied_mandatory = len(
+            [r for r in requirements if r.mandatory and r.is_satisfied_by_ciaf()]
+        )
+
         coverage_by_framework = {}
         for framework in frameworks:
             framework_reqs = self.get_requirements([framework])
-            framework_satisfied = len([r for r in framework_reqs if r.is_satisfied_by_ciaf()])
+            framework_satisfied = len(
+                [r for r in framework_reqs if r.is_satisfied_by_ciaf()]
+            )
             coverage_by_framework[framework.value] = {
                 "total_requirements": len(framework_reqs),
                 "satisfied_requirements": framework_satisfied,
-                "coverage_percentage": (framework_satisfied / len(framework_reqs)) * 100 if framework_reqs else 0
+                "coverage_percentage": (
+                    (framework_satisfied / len(framework_reqs)) * 100
+                    if framework_reqs
+                    else 0
+                ),
             }
-        
+
         return {
             "overall_coverage": {
                 "total_requirements": total_requirements,
                 "satisfied_requirements": satisfied_requirements,
-                "coverage_percentage": (satisfied_requirements / total_requirements) * 100 if total_requirements else 0,
-                "mandatory_coverage": (satisfied_mandatory / mandatory_requirements) * 100 if mandatory_requirements else 0
+                "coverage_percentage": (
+                    (satisfied_requirements / total_requirements) * 100
+                    if total_requirements
+                    else 0
+                ),
+                "mandatory_coverage": (
+                    (satisfied_mandatory / mandatory_requirements) * 100
+                    if mandatory_requirements
+                    else 0
+                ),
             },
             "framework_coverage": coverage_by_framework,
             "unsatisfied_requirements": [
@@ -771,74 +788,73 @@ class RegulatoryMapper:
                     "requirement_id": r.requirement_id,
                     "framework": r.framework.value,
                     "title": r.title,
-                    "mandatory": r.mandatory
+                    "mandatory": r.mandatory,
                 }
-                for r in requirements if not r.is_satisfied_by_ciaf()
-            ]
+                for r in requirements
+                if not r.is_satisfied_by_ciaf()
+            ],
         }
-    
+
     def generate_compliance_checklist(
-        self,
-        frameworks: List[ComplianceFramework],
-        output_format: str = "json"
+        self, frameworks: List[ComplianceFramework], output_format: str = "json"
     ) -> str:
         """Generate compliance checklist for specified frameworks."""
-        
+
         requirements = self.get_requirements(frameworks)
-        
+
         checklist = {
             "frameworks": [f.value for f in frameworks],
             "total_requirements": len(requirements),
             "mandatory_requirements": len([r for r in requirements if r.mandatory]),
-            "requirements": []
+            "requirements": [],
         }
-        
+
         for req in requirements:
-            checklist["requirements"].append({
-                "requirement_id": req.requirement_id,
-                "framework": req.framework.value,
-                "title": req.title,
-                "description": req.description,
-                "category": req.category,
-                "mandatory": req.mandatory,
-                "risk_level": req.risk_level,
-                "ciaf_satisfied": req.is_satisfied_by_ciaf(),
-                "ciaf_capabilities": req.ciaf_capabilities,
-                "implementation_notes": req.implementation_notes,
-                "verification_method": req.verification_method,
-                "documentation_required": req.documentation_required
-            })
-        
+            checklist["requirements"].append(
+                {
+                    "requirement_id": req.requirement_id,
+                    "framework": req.framework.value,
+                    "title": req.title,
+                    "description": req.description,
+                    "category": req.category,
+                    "mandatory": req.mandatory,
+                    "risk_level": req.risk_level,
+                    "ciaf_satisfied": req.is_satisfied_by_ciaf(),
+                    "ciaf_capabilities": req.ciaf_capabilities,
+                    "implementation_notes": req.implementation_notes,
+                    "verification_method": req.verification_method,
+                    "documentation_required": req.documentation_required,
+                }
+            )
+
         if output_format.lower() == "json":
             return json.dumps(checklist, indent=2)
         else:
             raise ValueError(f"Unsupported output format: {output_format}")
-    
+
     def get_implementation_guidance(
-        self,
-        framework: ComplianceFramework
+        self, framework: ComplianceFramework
     ) -> Dict[str, Any]:
         """Get implementation guidance for a specific framework."""
-        
+
         if framework not in self.requirements:
             raise ValueError(f"Framework {framework.value} not supported")
-        
+
         requirements = self.requirements[framework]
-        
+
         guidance = {
             "framework": framework.value,
             "overview": self._get_framework_overview(framework),
             "implementation_steps": self._get_implementation_steps(framework),
-            "ciaf_capabilities_needed": list(set([
-                cap for req in requirements
-                for cap in req.ciaf_capabilities
-            ])),
+            "ciaf_capabilities_needed": list(
+                set([cap for req in requirements for cap in req.ciaf_capabilities])
+            ),
             "documentation_templates": self._get_documentation_templates(framework),
-            "validation_procedures": self._get_validation_procedures(framework)
+            "validation_procedures": self._get_validation_procedures(framework),
         }
-        
+
         return guidance
-    
+
     def _get_framework_overview(self, framework: ComplianceFramework) -> str:
         """Get overview for a specific framework."""
         overviews = {
@@ -846,10 +862,10 @@ class RegulatoryMapper:
             ComplianceFramework.NIST_AI_RMF: "NIST AI RMF provides a framework for managing AI risks throughout the AI lifecycle.",
             ComplianceFramework.GDPR: "GDPR regulates data protection and privacy for individuals within the EU.",
             ComplianceFramework.HIPAA: "HIPAA establishes national standards for protecting health information.",
-            ComplianceFramework.SOX: "SOX establishes requirements for financial reporting and internal controls."
+            ComplianceFramework.SOX: "SOX establishes requirements for financial reporting and internal controls.",
         }
         return overviews.get(framework, "Compliance framework overview not available.")
-    
+
     def _get_implementation_steps(self, framework: ComplianceFramework) -> List[str]:
         """Get implementation steps for a specific framework."""
         # This would be expanded with detailed implementation steps
@@ -859,23 +875,23 @@ class RegulatoryMapper:
             "3. Implement CIAF capabilities",
             "4. Document compliance procedures",
             "5. Validate compliance implementation",
-            "6. Maintain ongoing compliance monitoring"
+            "6. Maintain ongoing compliance monitoring",
         ]
-    
+
     def _get_documentation_templates(self, framework: ComplianceFramework) -> List[str]:
         """Get documentation templates for a specific framework."""
         return [
             "compliance_policy_template",
             "risk_assessment_template",
             "audit_procedures_template",
-            "incident_response_template"
+            "incident_response_template",
         ]
-    
+
     def _get_validation_procedures(self, framework: ComplianceFramework) -> List[str]:
         """Get validation procedures for a specific framework."""
         return [
             "compliance_audit_procedure",
             "risk_assessment_validation",
             "documentation_review_process",
-            "ongoing_monitoring_procedures"
+            "ongoing_monitoring_procedures",
         ]

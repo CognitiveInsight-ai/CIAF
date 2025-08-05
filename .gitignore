@@ -213,6 +213,29 @@ PatentDocs/
 *.patent.pdf
 *_Patent.*
 
+# CIAF specific cleanup patterns
+ciaf_metadata/
+ciaf_metadata_demo/
+compliance_metadata/
+compliance_reports/
+temp_storage/
+logs/
+reports/
+exports/
+backups/
+*.gltf
+*.json.bak
+*_performance_test*.py
+*_debug_test*.py
+*_demo*.py
+*_demo*.html
+ciaf_performance_report_*.txt
+ciaf_compliance_report*.json
+ciaf_compliance_report*.html
+ciaf_360_compliance_metadata.json
+ciaf_provenance_*.gltf
+ciaf_provenance_graph.json
+
 # Test file for web app
 # This file is used to test the web application functionality and should not be ignored.
 /ciaf_metadata
